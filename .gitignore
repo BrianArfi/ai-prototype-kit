@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+node_modules/
+.wrangler/
+.kit-build/
+state/
+*.db
+*.db-wal
+*.db-shm
+*.log
+.DS_Store

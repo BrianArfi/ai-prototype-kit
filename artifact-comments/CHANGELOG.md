@@ -1,0 +1,52 @@
+# Changelog
+
+All notable changes to artifact-comments are recorded here.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
+
+## [1.0.0] - 2026-09-30
+<!-- source: git log of the private source repo, commit "feat(artifact-comments): v1.0.0 standalone, swappable backend" (2026-09-30), exported as tag v1.0.0 by publish_skill_repo.py -->
+
+### Added
+- A self-hosted backend, `server/node/server.mjs`. It needs Node 22.13 or later and no npm packages: storage is one SQLite file through the built-in `node:sqlite`. It serves the same `/api/comments` contract and validation as the Cloudflare function, runs every POST in one transaction, and can serve a folder of pages with clean URLs (`--static`).
+- Owner endpoints on the node server, protected by a token (`--token` or `ARTIFACT_COMMENTS_TOKEN`): list every page, soft delete a comment with its replies, and restore it.
+- `server/node/package.json` (engines `node >=22.13`) and a `Dockerfile`.
+- Opt-in CORS on both backends: `ALLOWED_ORIGINS` (a comma list, or `*`) on Cloudflare, `--allow-origin` on the node server. Preflight requests from an allowed origin are answered, and any other origin gets no CORS headers.
+- `comments_cli.py --backend cloudflare|node`. On `node`, `list`, `delete` and `restore` go through the owner endpoints with `--base` and `--token`. `repair` and `setup` stay Cloudflare only and refuse clearly on `node`.
+- A version line in the Comments panel ("artifact-comments v1.0.0 · What's new") that links to this changelog. `data-changelog` points it somewhere else.
+- `tests/e2e_test.py --backend wrangler|node|both` runs the one browser suite against either backend, plus checks for CORS, byte-accurate size limits, and the owner CLI round trip (post, list, delete, restore) on the node server.
+- `LICENSE` (Apache-2.0) and `NOTICE`, so the skill can ship as a standalone repository.
+
+### Changed
+- The backend is swappable. The browser client still talks to one URL (`GET ?slug=`, `POST` JSON), set with `data-api`, and both backends implement that contract.
+
+### Fixed
+- Cross-origin pages could not use a comments endpoint on another origin: the server answered the preflight with a bare `204` and no CORS headers, although the README said it could.
+- The 8 KB request limit counted characters, not bytes, so a body of multi-byte text sent without a `Content-Length` could pass it. It now counts UTF-8 bytes.
+
+## [0.2.0] - 2026-09-30
+<!-- source: git log of the private source repo, commits 82593b3bd (2026-09-29, "v2 comment layer - Figma-style pins, jump-to-part list, safe keys"), 10f240093 (2026-09-29, "comment jump survives a wrong stored flow") and 77256d3bc (2026-09-30, "shareable Figma-style comment skill on every artifact"). No git tag existed; the version label was assigned when v1.0.0 was prepared. -->
+
+### Added
+- Figma-style pins: each thread is a numbered pin at the exact point that was clicked, and clicking a pin opens its thread.
+- A Comments list where every row jumps to its part: it restores the page state, scrolls to the part, flashes it and opens the thread.
+- Replies, one level deep. A reply to a reply joins the top thread.
+- The adapter API (`window.ArtifactComments`: `state`, `restore`, `isCurrent`, `search`, `label`, `pause`) for pages with tabs, slides or walkthroughs.
+- Hide pins, "Not sent" with Retry for failed or offline posts, `Ctrl` + `Enter` to post and `Esc` to close.
+- Storage of one key per comment plus a rebuilt per-page summary, so simultaneous posts are never lost and a page view costs one read.
+- `comments_cli.py` with `list`, `delete` (to a trash), `restore`, `repair` and `setup`.
+- `tests/e2e_test.py`, 65 browser checks against `wrangler pages dev`.
+- The first standalone packaging as a skill, with a README and a demo page.
+- The UI lives in a Shadow DOM attached to `<html>`, so page CSS cannot restyle it.
+
+### Fixed
+- The space bar and arrow keys no longer reach the page while a comment is typed or while comment mode is on.
+- A jump to a comment whose recorded page state was wrong now searches the other states until the part is found.
+- The comment form flips above the part when opening below it would push the Save button off screen.
+
+## [0.1.0] - 2026-09-29
+<!-- source: git log of the private source repo, commits f630b1a0e (2026-09-29, "click-to-comment layer on the customer journey artifact") and 20cb2d9be (2026-09-29, "shared comments, stored with the artifact"). No git tag existed; the version label was assigned when v1.0.0 was prepared. -->
+
+### Added
+- An inline click-to-comment layer on one published page: comment mode pauses playback, a click on any element places a numbered marker and asks for a name and a comment.
+- Comments were first kept in the reader's browser, with a Copy all button to send them back.
+- The same day, shared storage replaced that: a Cloudflare Pages Function (`/api/comments`) on Workers KV, so everyone who opens the page sees every comment, and a command to read them back.

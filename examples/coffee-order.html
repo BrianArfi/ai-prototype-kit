@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brewline: order ahead (prototype)</title>
+<style>
+:root{
+  --bg:#f3f1ed; --ink:#1d1b19; --muted:#6b655e; --line:#e2ddd5; --card:#ffffff;
+  --brand:#7a4a2a; --brand-ink:#ffffff; --soft:#f4ebe3; --ok:#2f7d4f; --frame:#1d1b19;
+  --bar:#1d1b19; --bar-ink:#f3f1ed;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#141211; --ink:#efebe6; --muted:#a39c94; --line:#2c2825; --card:#1d1a18;
+  --brand:#d49a6a; --brand-ink:#1d1310; --soft:#2a211b; --ok:#5fc38a; --frame:#000;
+  --bar:#efebe6; --bar-ink:#141211;
+}}
+[data-theme=dark]{
+  --bg:#141211; --ink:#efebe6; --muted:#a39c94; --line:#2c2825; --card:#1d1a18;
+  --brand:#d49a6a; --brand-ink:#1d1310; --soft:#2a211b; --ok:#5fc38a; --frame:#000;
+  --bar:#efebe6; --bar-ink:#141211;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  display:flex;flex-direction:column;align-items:center;padding:24px 16px 96px}
+h1.title{font-size:15px;font-weight:600;color:var(--muted);margin:0 0 16px;letter-spacing:.02em}
+
+/* device frame */
+.phone{width:360px;height:720px;border-radius:44px;background:var(--frame);padding:12px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.screen-wrap{position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;background:var(--card)}
+.status{height:36px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-size:12px;font-weight:600}
+.screen{position:absolute;inset:36px 0 0 0;display:flex;flex-direction:column}
+.screen[hidden]{display:none}
+.top{display:flex;align-items:center;gap:10px;padding:8px 18px 12px}
+.top h2{font-size:20px;margin:0;flex:1}
+.back{border:0;background:var(--soft);color:var(--ink);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px}
+.body{flex:1;overflow:auto;padding:0 18px 18px}
+.foot{padding:14px 18px 22px;border-top:1px solid var(--line)}
+.cta{width:100%;border:0;border-radius:14px;background:var(--brand);color:var(--brand-ink);padding:14px;font-size:16px;font-weight:600;cursor:pointer}
+.cta:disabled{opacity:.45;cursor:not-allowed}
+.muted{color:var(--muted)}
+
+/* screen 1: menu */
+.store{background:var(--soft);border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:13px}
+.store b{display:block;font-size:14px}
+.item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;color:inherit;font:inherit}
+.cup{width:48px;height:48px;border-radius:12px;background:var(--soft);display:grid;place-items:center;flex-shrink:0}
+.item .nm{font-weight:600}
+.item .pr{margin-left:auto;font-weight:600}
+
+/* screen 2: customise */
+.hero{background:var(--soft);border-radius:18px;height:130px;display:grid;place-items:center;margin-bottom:14px}
+.group{margin:14px 0}
+.group h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 8px}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:10px 6px;cursor:pointer;font:inherit}
+.seg button.on{border-color:var(--brand);background:var(--soft);font-weight:600}
+.toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+.toggle input{width:20px;height:20px;accent-color:var(--brand)}
+
+/* screen 3: checkout */
+.line{display:flex;justify-content:space-between;padding:6px 0}
+.total{font-weight:700;font-size:17px;border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
+.slot{display:flex;gap:8px;flex-wrap:wrap}
+.slot button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;cursor:pointer;font:inherit}
+.slot button.on{border-color:var(--brand);background:var(--soft);font-weight:600}
+.pay{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:8px}
+
+/* screen 4: status */
+.ready{text-align:center;padding-top:24px}
+.ring{width:120px;height:120px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;background:var(--soft)}
+.steps{list-style:none;padding:0;margin:22px 0 0;text-align:left}
+.steps li{display:flex;gap:10px;align-items:center;padding:8px 0;color:var(--muted)}
+.steps li.done{color:var(--ink);font-weight:600}
+.dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--line)}
+.steps li.done .dot{background:var(--ok);border-color:var(--ok)}
+.code{font:700 28px ui-monospace,Menlo,monospace;letter-spacing:.12em;margin-top:6px}
+
+/* presenter bar */
+.presenter{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:6px;align-items:center;
+  background:var(--bar);color:var(--bar-ink);border-radius:999px;padding:6px 8px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.presenter button{border:0;background:transparent;color:inherit;padding:6px 10px;border-radius:999px;cursor:pointer;font:inherit}
+.presenter button.on{background:rgba(127,127,127,.3);font-weight:600}
+.presenter .keys{opacity:.7;padding:0 8px;font-size:12px}
+.presenter[hidden]{display:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<h1 class="title">Brewline &middot; order ahead &middot; clickable prototype</h1>
+
+<div class="phone" aria-label="Phone">
+ <div class="screen-wrap">
+  <div class="status"><span>9:41</span><span>5G &#9646;&#9646;&#9646;</span></div>
+
+  <!-- 1. Menu -->
+  <section class="screen" id="s1" data-screen="1" data-title="Menu">
+   <div class="top"><h2 id="menu-title">Order ahead</h2></div>
+   <div class="body">
+    <div class="store" id="store"><b>Harbour Street</b><span class="muted">Open until 18:00 &middot; 4 min walk</span></div>
+    <button class="item" id="item-latte" data-go="2">
+     <span class="cup"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h12v6a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/><path d="M17 10h2a2 2 0 0 1 0 4h-2"/></svg></span>
+     <span><span class="nm">Oat latte</span><br><span class="muted">Double shot, steamed oat milk</span></span>
+     <span class="pr">$4.50</span>
+    </button>
+    <button class="item" data-go="2">
+     <span class="cup"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h12v6a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/></svg></span>
+     <span><span class="nm">Flat white</span><br><span class="muted">Ristretto, whole milk</span></span>
+     <span class="pr">$4.20</span>
+    </button>
+    <button class="item" data-go="2">
+     <span class="cup"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h12l-1 16H7z"/></svg></span>
+     <span><span class="nm">Cold brew</span><br><span class="muted">Steeped 18 hours</span></span>
+     <span class="pr">$3.90</span>
+    </button>
+   </div>
+  </section>
+
+  <!-- 2. Customise -->
+  <section class="screen" id="s2" data-screen="2" data-title="Customise" hidden>
+   <div class="top"><button class="back" data-go="1" aria-label="Back">&larr;</button><h2 id="drink-name">Oat latte</h2></div>
+   <div class="body">
+    <div class="hero"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 8h12v6a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/><path d="M17 10h2a2 2 0 0 1 0 4h-2"/><path d="M8 3v2M11 3v2M14 3v2"/></svg></div>
+    <div class="group" id="size-group"><h3>Size</h3>
+     <div class="seg" id="size">
+      <button data-size="S" data-add="-0.40">Small</button>
+      <button data-size="M" data-add="0" class="on">Medium</button>
+      <button data-size="L" data-add="0.60">Large</button>
+     </div>
+    </div>
+    <div class="group" id="milk-group"><h3>Milk</h3>
+     <div class="seg" id="milk">
+      <button class="on">Oat</button><button>Whole</button><button>Almond</button>
+     </div>
+    </div>
+    <div class="group"><h3>Extras</h3>
+     <label class="toggle" id="extra-shot">Extra shot <span class="muted">+$0.80</span><input type="checkbox" id="shot"></label>
+    </div>
+   </div>
+   <div class="foot"><button class="cta" id="add-btn" data-go="3">Add to order &middot; <span id="price">$4.50</span></button></div>
+  </section>
+
+  <!-- 3. Checkout -->
+  <section class="screen" id="s3" data-screen="3" data-title="Checkout" hidden>
+   <div class="top"><button class="back" data-go="2" aria-label="Back">&larr;</button><h2>Checkout</h2></div>
+   <div class="body">
+    <div class="group"><h3>Your order</h3>
+     <div class="line"><span id="sum-name">Oat latte, Medium</span><span id="sum-price">$4.50</span></div>
+     <div class="line muted"><span>Service fee</span><span>$0.00</span></div>
+     <div class="line total"><span>Total</span><span id="sum-total">$4.50</span></div>
+    </div>
+    <div class="group" id="pickup"><h3>Pick up</h3>
+     <div class="slot" id="slots"><button class="on">As soon as possible</button><button>In 15 min</button><button>In 30 min</button></div>
+    </div>
+    <div class="group"><h3>Pay with</h3>
+     <div class="pay" id="pay-method"><svg width="28" height="20" viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="26" height="18" rx="3"/><path d="M1 7h26"/></svg>Card ending 4242</div>
+    </div>
+   </div>
+   <div class="foot"><button class="cta" id="pay-btn" data-go="4">Pay <span id="pay-total">$4.50</span></button></div>
+  </section>
+
+  <!-- 4. Order status -->
+  <section class="screen" id="s4" data-screen="4" data-title="Order status" hidden>
+   <div class="top"><h2>Your order</h2></div>
+   <div class="body ready">
+    <div class="ring" id="ready-ring"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5L20 7"/></svg></div>
+    <div id="ready-msg"><b>Ready in about 4 minutes</b><div class="muted">Show this code at the pick-up shelf</div></div>
+    <div class="code" id="pickup-code">B-217</div>
+    <ul class="steps" id="steps">
+     <li class="done"><span class="dot"></span>Order received</li>
+     <li class="done"><span class="dot"></span>Barista is making it</li>
+     <li><span class="dot"></span>Ready on the shelf</li>
+    </ul>
+   </div>
+   <div class="foot"><button class="cta" data-go="1">Order something else</button></div>
+  </section>
+ </div>
+</div>
+
+<nav class="presenter" id="presenter" aria-label="Presenter controls">
+ <button data-jump="1">1 Menu</button>
+ <button data-jump="2">2 Customise</button>
+ <button data-jump="3">3 Checkout</button>
+ <button data-jump="4">4 Status</button>
+ <button id="play" title="Play the flow (space)">&#9654; Play</button>
+ <span class="keys">1-4 jump &middot; &larr; &rarr; step &middot; space play &middot; H hide bar &middot; T theme</span>
+</nav>
+
+<script>
+(function () {
+  var screens = [].slice.call(document.querySelectorAll('.screen'));
+  var current = 1, timer = null;
+
+  function show(n) {
+    n = Math.max(1, Math.min(screens.length, n));
+    current = n;
+    screens.forEach(function (s) { s.hidden = Number(s.dataset.screen) !== n; });
+    [].forEach.call(document.querySelectorAll('[data-jump]'), function (b) {
+      b.classList.toggle('on', Number(b.dataset.jump) === n);
+    });
+    history.replaceState(null, '', '#screen-' + n);
+  }
+
+  function play() {
+    if (timer) return pause();
+    document.getElementById('play').innerHTML = '&#10074;&#10074; Pause';
+    show(1);
+    timer = setInterval(function () {
+      if (current >= screens.length) return pause();
+      show(current + 1);
+    }, 2500);
+  }
+  function pause() {
+    clearInterval(timer); timer = null;
+    document.getElementById('play').innerHTML = '&#9654; Play';
+  }
+
+  /* price on the customise screen */
+  var base = 4.50;
+  function price() {
+    var size = document.querySelector('#size .on');
+    var p = base + Number(size.dataset.add) + (document.getElementById('shot').checked ? 0.80 : 0);
+    var txt = '$' + p.toFixed(2);
+    ['price', 'sum-price', 'sum-total', 'pay-total'].forEach(function (id) { document.getElementById(id).textContent = txt; });
+    document.getElementById('sum-name').textContent = 'Oat latte, ' + size.textContent;
+  }
+  function segment(id) {
+    document.getElementById(id).addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      [].forEach.call(this.children, function (x) { x.classList.toggle('on', x === b); });
+      price();
+    });
+  }
+  segment('size'); segment('milk'); segment('slots');
+  document.getElementById('shot').addEventListener('change', price);
+
+  document.addEventListener('click', function (e) {
+    var go = e.target.closest('[data-go]'); if (go) { pause(); show(Number(go.dataset.go)); return; }
+    var j = e.target.closest('[data-jump]'); if (j) { pause(); show(Number(j.dataset.jump)); return; }
+    if (e.target.closest('#play')) play();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target.closest && e.target.closest('input,textarea,select')) return;
+    if (e.key >= '1' && e.key <= String(screens.length)) { pause(); show(Number(e.key)); }
+    else if (e.key === 'ArrowRight') { pause(); show(current + 1); }
+    else if (e.key === 'ArrowLeft') { pause(); show(current - 1); }
+    else if (e.key === ' ') { e.preventDefault(); play(); }
+    else if (e.key === 'h' || e.key === 'H') { var bar = document.getElementById('presenter'); bar.hidden = !bar.hidden; }
+    else if (e.key === 't' || e.key === 'T') {
+      var r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === 'dark'
+        : matchMedia('(prefers-color-scheme: dark)').matches;
+      r.dataset.theme = dark ? 'light' : 'dark';
+    }
+  });
+
+  var m = /#screen-(\d)/.exec(location.hash);
+  show(m ? Number(m[1]) : 1);
+
+  /* Comment adapter: lets pinned comments find the screen they were made on. */
+  window.ArtifactComments = {
+    state: function () { return { screen: current }; },
+    restore: function (s) { if (s && s.screen) { pause(); show(s.screen); } },
+    isCurrent: function (s) { return s && s.screen ? s.screen === current : undefined; },
+    search: function (test) {
+      var from = current;
+      for (var n = 1; n <= screens.length; n++) { show(n); if (test()) return true; }
+      show(from);
+      return false;
+    },
+    label: function (el) {
+      var s = el.closest('.screen');
+      return s ? 'Screen ' + s.dataset.screen + ': ' + s.dataset.title : '';
+    },
+    pause: pause
+  };
+})();
+</script>
+</body>
+</html>

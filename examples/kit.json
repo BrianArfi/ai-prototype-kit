@@ -1,0 +1,12 @@
+{
+  "project": "ai-prototype-kit-demo",
+  "title": "AI Prototype Kit examples",
+  "comments": true,
+  "pages": [
+    {
+      "name": "Coffee order",
+      "source": "coffee-order.html",
+      "description": "Order-ahead flow for a coffee shop: menu, customise, checkout, pick-up status."
+    }
+  ]
+}
