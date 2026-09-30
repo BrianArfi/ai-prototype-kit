@@ -25,6 +25,7 @@ visibly on the screen. Do not quietly pick one.
 - **Every screen reachable, no dead buttons.** A control that does nothing must look disabled.
 - **Presenter controls**, because this gets driven live: number keys jump to a screen, arrow keys
   step, space plays, one key hides the presenter bar for a clean recording. Print the key map on screen.
+  Keep the bar clear of the bottom-right corner, where the comment buttons sit.
 - **A self-playing option**, so the presenter can talk over it instead of clicking.
 - **Realistic content.** Plausible names, prices, the right currency and language. Lorem ipsum
   reads as unfinished and turns the review into a discussion about the copy.

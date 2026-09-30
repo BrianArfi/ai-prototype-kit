@@ -78,12 +78,15 @@ h1.title{font-size:15px;font-weight:600;color:var(--muted);margin:0 0 16px;lette
 .code{font:700 28px ui-monospace,Menlo,monospace;letter-spacing:.12em;margin-top:6px}
 
 /* presenter bar */
-.presenter{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:6px;align-items:center;
+/* bottom-left: the bottom-right corner belongs to the comment buttons */
+.presenter{position:fixed;left:16px;bottom:16px;display:flex;gap:6px;align-items:center;max-width:calc(100vw - 300px);flex-wrap:wrap;
   background:var(--bar);color:var(--bar-ink);border-radius:999px;padding:6px 8px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .presenter button{border:0;background:transparent;color:inherit;padding:6px 10px;border-radius:999px;cursor:pointer;font:inherit}
 .presenter button.on{background:rgba(127,127,127,.3);font-weight:600}
 .presenter .keys{opacity:.7;padding:0 8px;font-size:12px}
 .presenter[hidden]{display:none}
+@media (max-width:1100px){.presenter .keys{display:none}}
+@media (max-width:640px){.presenter{max-width:calc(100vw - 32px);bottom:72px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
