@@ -1,8 +1,8 @@
 # AI Prototype Kit
 
-**From idea to a clickable prototype people can comment on, the same day.**
+**AI makes visual explanations easy. Now the feedback is easy too.**
 
-Describe a flow to your AI. It builds a prototype you can click. One command turns it into a link. People pin comments on the exact part they mean. The AI reads the comments and revises, and the same link shows the new version. Then you demo it live.
+Ask your AI for an explainer page or a clickable prototype. Share the link. People comment on the exact part they mean, like in Figma. The AI reads the comments and revises, and you demo the same link.
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Version 0.1.0](https://img.shields.io/badge/version-0.1.0-green.svg)](CHANGELOG.md)
@@ -10,17 +10,40 @@ Describe a flow to your AI. It builds a prototype you can click. One command tur
 
 ![A reviewer pins a comment on a page, a second reviewer replies, and the list jumps to a comment on another tab](artifact-comments/docs/demo.gif)
 
+## The best way to explain something now
+
+In the AI era, the best way to explain an idea is visual, and AI builds it in minutes. That beats a long document, a slide full of boxes, or a week of waiting for a design file.
+
+| Command | What AI builds | Example |
+| :--- | :--- | :--- |
+| [`/artifact`](commands/artifact.md) | An explainer page: a system, a proposal, a report. One page, readable on a phone | `/artifact how our refund process works, for the support team` |
+| [`/mockup`](commands/mockup.md) | A clickable prototype of a flow, with a presenter mode for live demos | `/mockup an order-ahead flow for a coffee shop, for the investor meeting` |
+
+## But when you share it, people do not know how to comment
+
+A shared page has no comment button like the one in Figma or Google Docs. So the feedback goes somewhere else, or nowhere:
+
+- A screenshot with scribbles on it, sent in a chat.
+- "The thing top left, that one." Which thing?
+- "Looks good!", and then nothing, because commenting is a hassle.
+- Feedback spread across three chats and two email threads.
+
+The better your AI makes the explanation, the more feedback you lose.
+
+## The fix: comments on the page, then AI revises
+
+This kit makes every AI-made page commentable like Figma. Reviewers click any part, write, and reply to each other. No account needed. Then the AI reads every comment, revises the page, and tells you what it did for each one. The link stays the same, so you demo the latest version.
+
+| Before | After |
+| :--- | :--- |
+| Feedback in screenshots and chats | Feedback pinned on the part it is about |
+| "Looks good!" and silence | One click to comment, so people do |
+| Every revision starts from the brief again | The AI revises from the comments, on the same link |
+| Waiting days for a design slot | A prototype the same day |
+
 ## Who it is for
 
-PMs, founders, consultants and team leads who have to pitch an idea or get people to agree on one. A feature for your boss, a flow for a client, a product for an investor, a process for a team.
-
-You are not a designer, and you should not have to wait for one to show an idea that only needs to be good enough to decide. Sound familiar?
-
-- The pitch is tomorrow morning. Design is booked until next week. So the pitch is slides with boxes and "imagine that here...".
-- Feedback arrives as marked-up screenshots in a chat. Three rounds of changes take three weeks.
-- In the demo you open a static design and say "when you click here, this will open...".
-
-Design tools were built for people who draw by hand. AI is best at writing working HTML. So when you need something to show, the fastest path from idea to clickable is HTML, not a design file.
+PMs, founders, consultants and team leads who have to pitch an idea or get people to agree on one: a feature for your boss, a flow for a client, a product for an investor, a process for a team. You do not have to be a designer. Final design stays with designers; this is for the stage where everyone needs to understand and agree.
 
 ## The loop
 
@@ -39,13 +62,6 @@ flowchart LR
 3. **Publish it.** `/publish` turns it into a link anyone can open, on a phone or a laptop.
 4. **People comment on the exact part.** Like Figma: click any part, write a comment, reply to others. No account needed.
 5. **AI reads the comments and revises.** Say `/revise-from-comments`. It changes the page, tells you what it did for each comment, and the same link now shows the new version.
-
-| Before | After |
-| :--- | :--- |
-| Waiting days for a design slot | A prototype the same day |
-| Pitching with slides and "imagine that" | Pitching with something people can click |
-| Feedback scattered across screenshots | Feedback pinned on the part it is about |
-| Every revision starts from the brief again | The AI revises from the comments, on the same link |
 
 ## What is inside
 

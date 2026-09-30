@@ -1,8 +1,8 @@
 # artifact-comments
 
-**Figma-style comments for any static HTML page. One script tag, no accounts.**
+**Your AI-made pages can now be commented on like Figma. One script tag, no accounts.**
 
-Share a page for review, and readers pin comments to the exact spot they mean. Threads, replies and a list that jumps to each part come with it. The backend is yours: Cloudflare Pages with Workers KV, or one Node file on SQLite that you host yourself.
+AI makes a good explainer, prototype or deck in minutes. But a shared link has no comment button, so readers do not know where to give feedback. They send marked-up screenshots, write "the thing top left", or say nothing. With this script, readers click any part of the page and write. Their comment is pinned to that exact spot, with threads, replies and a list that jumps to each part. The backend is yours: Cloudflare Pages with Workers KV, or one Node file on SQLite that you host yourself.
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Version 1.0.0](https://img.shields.io/badge/version-1.0.0-green.svg)](CHANGELOG.md)
