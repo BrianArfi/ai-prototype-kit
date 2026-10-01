@@ -3,6 +3,19 @@
 All notable changes to artifact-comments are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+## [1.0.2] - 2026-10-01
+
+### Changed
+- README rewritten to open with the problem; reference moved to docs/. No code changes.
+- The README top follows the shape of popular open-source READMEs: one line on the problem and who it is for, the demo GIF, Why, What it does, Quick start and a screenshot example. The reference sections move into `docs/` ([how-it-works.md](docs/how-it-works.md), [backends.md](docs/backends.md), [adapter.md](docs/adapter.md), [owner-cli.md](docs/owner-cli.md), [api.md](docs/api.md), [comparison.md](docs/comparison.md), [testing.md](docs/testing.md)), linked from a Documentation list. The stars badge is dropped.
+
+## [1.0.1] - 2026-10-01
+
+### Changed
+- The README is rewritten around the problem it solves: the shift, the gap, the fix, the loop and a capability table come first. Every technical section is kept. No code changes.
+
 ## [1.0.0] - 2026-09-30
 <!-- source: git log of the private source repo, commit "feat(artifact-comments): v1.0.0 standalone, swappable backend" (2026-09-30), exported as tag v1.0.0 by publish_skill_repo.py -->
 

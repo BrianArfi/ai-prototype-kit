@@ -3,6 +3,14 @@
 All notable changes to the AI Prototype Kit are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [0.1.1] - 2026-10-01
+
+### Changed
+- README rewritten to open with the problem; reference moved to docs/ ([how-it-works.md](docs/how-it-works.md), [setup.md](docs/setup.md), [publish-script.md](docs/publish-script.md), [faq.md](docs/faq.md)). No code changes.
+- The tagline now says it is a Claude Code kit. The quick start adds the revise step.
+- New hero GIF, `docs/revise-loop.gif`: a comment pinned on the coffee-order prototype, `/revise-from-comments`, and the same link reloaded with the change.
+- Bundled artifact-comments updated to v1.0.2 (README only).
+
 ## [0.1.0] - 2026-09-30
 
 First release.

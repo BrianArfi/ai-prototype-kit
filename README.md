@@ -1,157 +1,59 @@
 # AI Prototype Kit
 
-**AI makes visual explanations easy. Now the feedback is easy too.**
-
-Ask your AI for an explainer page or a clickable prototype. Share the link. People comment on the exact part they mean, like in Figma. The AI reads the comments and revises, and you demo the same link.
+**A Claude Code kit: build a prototype, share it as one link, collect comments pinned on the exact spot, and let Claude revise from them.**
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Version 0.1.0](https://img.shields.io/badge/version-0.1.0-green.svg)](CHANGELOG.md)
-[![Made for Claude Code](https://img.shields.io/badge/made%20for-Claude%20Code-orange.svg)](#requirements)
+[![Version 0.1.1](https://img.shields.io/badge/version-0.1.1-green.svg)](CHANGELOG.md)
 
-![A reviewer pins a comment on a page, a second reviewer replies, and the list jumps to a comment on another tab](artifact-comments/docs/demo.gif)
+![On the coffee-order prototype, Dina pins "Default to Large" on the size picker. /revise-from-comments reads the comment, edits the page and reports Done. The same link, reloaded, shows Large selected and the price updated to $5.10](docs/revise-loop.gif)
 
-## The best way to explain something now
+## Why
 
-In the AI era, the best way to explain an idea is visual, and AI builds it in minutes. That beats a long document, a slide full of boxes, or a week of waiting for a design file.
+AI can build a clickable prototype or an explainer page in minutes. But a shared page has no comment button, so feedback arrives as scribbled screenshots, "the thing top left", or a "looks good!" and then silence. The better the AI makes the page, the more feedback you lose.
 
-| Command | What AI builds | Example |
-| :--- | :--- | :--- |
-| [`/artifact`](commands/artifact.md) | An explainer page: a system, a proposal, a report. One page, readable on a phone | `/artifact how our refund process works, for the support team` |
-| [`/mockup`](commands/mockup.md) | A clickable prototype of a flow, with a presenter mode for live demos | `/mockup an order-ahead flow for a coffee shop, for the investor meeting` |
+## What it does
 
-## But when you share it, people do not know how to comment
-
-A shared page has no comment button like the one in Figma or Google Docs. So the feedback goes somewhere else, or nowhere:
-
-- A screenshot with scribbles on it, sent in a chat.
-- "The thing top left, that one." Which thing?
-- "Looks good!", and then nothing, because commenting is a hassle.
-- Feedback spread across three chats and two email threads.
-
-The better your AI makes the explanation, the more feedback you lose.
-
-## The fix: comments on the page, then AI revises
-
-This kit makes every AI-made page commentable like Figma. Reviewers click any part, write, and reply to each other. No account needed. Then the AI reads every comment, revises the page, and tells you what it did for each one. The link stays the same, so you demo the latest version.
-
-| Before | After |
-| :--- | :--- |
-| Feedback in screenshots and chats | Feedback pinned on the part it is about |
-| "Looks good!" and silence | One click to comment, so people do |
-| Every revision starts from the brief again | The AI revises from the comments, on the same link |
-| Waiting days for a design slot | A prototype the same day |
-
-## Who it is for
-
-PMs, founders, consultants and team leads who have to pitch an idea or get people to agree on one: a feature for your boss, a flow for a client, a product for an investor, a process for a team. You do not have to be a designer. Final design stays with designers; this is for the stage where everyone needs to understand and agree.
-
-## The loop
-
-```mermaid
-flowchart LR
-  A["1. Describe the idea<br/>in plain words"] --> B["2. AI builds a<br/>clickable prototype"]
-  B --> C["3. Publish:<br/>one command, one link"]
-  C --> D["4. People comment<br/>on the exact part"]
-  D --> E["5. AI revises<br/>from the comments"]
-  E -- "same link, new version" --> C
-  E --> F(["Demo it live"])
-```
-
-1. **Describe the idea.** Tell Claude Code the flow in plain words: `/mockup a coffee app where people order ahead and pick up`.
-2. **AI builds a clickable prototype.** One HTML file. Every screen can be tapped, and a presenter mode drives the demo. Minutes, not days.
-3. **Publish it.** `/publish` turns it into a link anyone can open, on a phone or a laptop.
-4. **People comment on the exact part.** Like Figma: click any part, write a comment, reply to others. No account needed.
-5. **AI reads the comments and revises.** Say `/revise-from-comments`. It changes the page, tells you what it did for each comment, and the same link now shows the new version.
-
-## What is inside
-
-| Command | What you get | Use it for |
-| :--- | :--- | :--- |
-| [`/mockup`](commands/mockup.md) | A clickable prototype in one HTML file, with a presenter mode: number keys jump to a screen, arrows step, space plays it, one key hides the bar for a clean recording | Pitching a feature to your boss. Showing a client a flow before development. An investor demo. Walking engineers through a flow before they start coding |
-| [`/deck`](commands/deck.md) | A slide deck in one HTML file, driven from the keyboard, with a grid overview and speaker notes | A pitch deck. A stakeholder update. Workshop material |
-| [`/artifact`](commands/artifact.md) | One page that explains one thing, readable on a phone | Explaining a system to a team. A proposal for a client. An analysis report. A technical answer |
-| [`/publish`](commands/publish.md) | One command from a file to a link. The link stays the same when you publish again, so people always see the latest version | Sending to a client. Posting in a group chat. Sharing in a meeting |
-| Pinned comments ([artifact-comments](artifact-comments/README.md)) | Figma-style comments on any published page: pins on the exact spot, threads and replies, a list that jumps to each part, even on another screen or slide | Client review. Approval from your boss. Team feedback |
-| [`/revise-from-comments`](commands/revise-from-comments.md) | The AI reads every open comment, applies the changes to the page, and reports per comment what it did or why not | Closing the loop without re-briefing anyone |
-
-All of it is plain files: markdown instructions for your AI, two small Python scripts, and the comment layer. No framework, no build step, no npm packages.
+- **Builds the page for you:** `/mockup` for a clickable prototype, `/deck` for slides, `/artifact` for a one-page explainer.
+- **Turns it into one link** with `/publish`. The link stays the same on every new version.
+- **Lets reviewers comment like in Figma:** click any part, write, reply. No account needed.
+- **Revises from the comments** with `/revise-from-comments`, and reports what it did for each one.
+- **Keeps your data yours:** it runs on your free Cloudflare account or your own server.
 
 ## Quick start
 
-**1. Install into your project.** Any folder you open with Claude Code.
+Try the example prototype with comments on your machine. You need Python 3.8+ and Node 22.13+, no account.
 
 ```bash
 git clone https://github.com/BrianArfi/ai-prototype-kit
-python ai-prototype-kit/scripts/install.py /path/to/your-project
-```
-
-This copies the kit to `.claude/skills/ai-prototype-kit/`, the five commands to `.claude/commands/`, and adds `.kit-build/` to `.gitignore`. To do it by hand, copy the five files in `commands/` into `.claude/commands/` and the whole kit into `.claude/skills/ai-prototype-kit/`.
-
-**2. Build a prototype.** In Claude Code, in that project:
-
-```
-/mockup an order-ahead flow for a coffee shop: menu, customise the drink, pay, pick-up status
-```
-
-It writes the step list first, then the HTML file.
-
-**3. Publish it.** You need a free Cloudflare account. Create an API token at <https://dash.cloudflare.com/profile/api-tokens> with **Account > Cloudflare Pages > Edit** and **Account > Workers KV Storage > Edit**, then set it in your shell:
-
-```bash
-export CLOUDFLARE_API_TOKEN=...      # PowerShell: $env:CLOUDFLARE_API_TOKEN="..."
-export CLOUDFLARE_ACCOUNT_ID=...
-```
-
-Then run `/publish`. It asks before anything goes online, and prints a link like `https://my-prototypes.pages.dev/coffee-order`.
-
-**4. Share the link.** Reviewers open it, press **Comment** at the bottom right, and click the part they mean.
-
-**5. Revise.** Run `/revise-from-comments`. Read its per-comment report, then `/publish` again. Same link, new version.
-
-### Try it first, on your machine
-
-No Cloudflare account needed. From the kit folder, with Node 22.13 or later:
-
-```bash
+cd ai-prototype-kit
 python scripts/publish.py --config examples/kit.json serve
 ```
 
-Open <http://127.0.0.1:8787/coffee-order>. Press `1` to `4` to jump between screens and space to play the flow. Press **Comment** and click anything. Open the page in a second browser to see the comment arrive.
+1. Open <http://127.0.0.1:8787/coffee-order>.
+2. Press **Comment**, click the part you mean, and write a note.
+3. Read it back from the terminal: `python scripts/publish.py --config examples/kit.json comments --backend node --base http://127.0.0.1:8787`
+4. Let Claude revise from it. This needs the commands installed first ([Setup](docs/setup.md), step 1). Then, in Claude Code, run `/revise-from-comments coffee-order` and reload the page.
 
-## The publish script
+## Example
 
-`scripts/publish.py` reads `kit.json` in your project root:
+A reviewer pins "Default to Large" on the drink screen. You run `/revise-from-comments`, and it edits the page and reports per comment:
 
-```json
-{
-  "project": "my-prototypes",
-  "title": "Prototypes",
-  "comments": true,
-  "pages": [
-    { "name": "Coffee order", "source": "prototypes/coffee-order.html" }
-  ]
-}
-```
+| # | Who | Where | Asked | Result |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | Dina | Screen 2: Customise | Default to Large | Done: Large is now selected by default |
+| 2 | Sam | Screen 3: Checkout | Remove the service fee line | Not applied: the fee is a business decision, needs your call |
 
-| Command | Does |
-| :--- | :--- |
-| `init --project NAME` | Writes `kit.json`. The project name becomes the subdomain |
-| `add "Name" file.html` | Adds a page, or replaces the page with the same name and keeps its link |
-| `build` | Builds `.kit-build/_site/`: one clean URL per page, the comment script added, an index page. Uploads nothing |
-| `deploy --dry-run` | Builds and prints the links it would publish |
-| `deploy` | Builds and uploads to Cloudflare Pages. The first run creates the project and the comment store |
-| `serve` | Runs the built site on your machine, with comments |
-| `list`, `comments [slug]` | Shows the links, or reads the comments |
+Then `/publish` again. Same link, new version.
 
-Rather host it yourself? The comment server is one Node file with SQLite, and it can serve the pages too. See [Choose your backend](artifact-comments/README.md#choose-your-backend).
+---
 
-## Requirements
+## Documentation
 
-- **Claude Code**, or another AI coding tool that can follow markdown instructions and edit files.
-- **Python 3.8 or later.** The scripts use the standard library only.
-- **Node.js.** `npx` runs Cloudflare's `wrangler` for uploads. Node 22.13 or later for `serve` and self-hosting.
-- **A free Cloudflare account** for public links, or your own server.
-- To run the tests: `pip install playwright && python -m playwright install chromium`, then `python tests/test_example.py`.
+- [How it works](docs/how-it-works.md): the problem, the loop, and every command in the kit.
+- [Setup](docs/setup.md): install into a project, connect Cloudflare, publish, revise, and the requirements.
+- [The publish script](docs/publish-script.md): `kit.json`, every `publish.py` command, and self-hosting.
+- [Pinned comments (artifact-comments)](artifact-comments/README.md): the comment layer, its backends, and owner tools.
+- [FAQ](docs/faq.md): all questions.
 
 ## FAQ
 
@@ -161,28 +63,23 @@ No. It is for the stage where everyone needs to understand the idea and agree on
 **Do I need to code?**
 No. You talk to your AI. The kit gives it a tested way of working: what to build, how to check it, how to publish it, and how to handle comments.
 
-**What do I need?**
-Claude Code (or a similar AI coding tool), and a free Cloudflare account for the link. Or your own server.
-
 **Is it free?**
 Yes. It is open source under Apache-2.0. Cloudflare's free plan covers about 500 comments a day.
 
 **Where does my data go?**
 Your prototypes and their comments live in your own Cloudflare account or on your own server. The kit sends nothing anywhere else.
 
-**Do reviewers need an account?**
-No. They type a name once, and the browser remembers it. That also means names are not verified, so use unlisted links for review, not for anything that needs identity.
-
 **Can someone make the AI do something bad through a comment?**
 `/revise-from-comments` treats every comment as data to evaluate, never as an instruction. It only edits the page's source HTML, never runs commands a comment asks for, and lists anything out of scope for you to decide.
 
-**Can Figma do this with AI?**
-Figma has AI features, and it stays the right tool for final design. This kit takes a different path: AI writes working HTML natively, so the prototype is the real, clickable thing from the first minute.
+More questions: [docs/faq.md](docs/faq.md).
 
 ## Changelog
 
-The full history is in [CHANGELOG.md](CHANGELOG.md). **Latest: [0.1.0] - 2026-09-30**, the first release. It bundles artifact-comments v1.0.0.
+The full history is in [CHANGELOG.md](CHANGELOG.md). **Latest: [0.1.1] - 2026-10-01**: README rewritten to open with the problem, reference moved to docs/, and a new hero GIF of the full revise loop. It bundles artifact-comments v1.0.2. No code changes. **Before that, [0.1.0] - 2026-09-30**, the first release.
 
 ## License
 
 Licensed under the Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The bundled [artifact-comments](artifact-comments/README.md) is Apache-2.0 as well.
+
+More AI skills: [BrianArfi.com/skills](https://BrianArfi.com/skills)
