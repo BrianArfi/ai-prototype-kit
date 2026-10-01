@@ -5,9 +5,9 @@
 For anyone who shares AI-built HTML pages (Claude artifacts, v0, Lovable exports, slide decks) and wants feedback on the exact spot.
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Version 1.0.2](https://img.shields.io/badge/version-1.0.2-green.svg)](CHANGELOG.md)
+[![Version 1.0.3](https://img.shields.io/badge/version-1.0.3-green.svg)](CHANGELOG.md)
 
-![A reader pins a comment on a part of the page, a second reader replies in the thread, and the comment list jumps to a part on another tab](docs/demo.gif)
+![artifact-comments: "Feedback, pinned to the spot." A proposal page with tabs in a browser, three numbered comment pins, and an open thread where Dina asks to lead with the time saved and Sam replies](docs/hero.png)
 
 ## Why
 
@@ -22,6 +22,8 @@ For anyone who shares AI-built HTML pages (Claude artifacts, v0, Lovable exports
 - **A list that jumps.** Click a comment and the page goes to its part, even on another tab or slide.
 - **No accounts.** Reviewers type a name once.
 - **Your data stays yours.** Run it on your own server or a free Cloudflare account. No third-party service.
+
+![The real UI in a browser window: Dina presses Comment, pins a note next to the page title, then Sam switches the name and replies in the thread. The comment list opens, and a click on Maya's comment switches to the Rollout plan tab and flashes the part it is pinned on](docs/demo.gif)
 
 ## Quick start
 
@@ -124,7 +126,8 @@ server/node/server.mjs           the self-hosted Node server (plus package.json,
 scripts/comments_cli.py          list, delete, restore, repair, setup
 examples/demo.html               a page with an adapter
 tests/e2e_test.py                end-to-end tests, on either backend
-docs/                            reference guides, the demo GIF and screenshots
+docs/                            reference guides, the hero, demo GIF and screenshots
+docs/src/                        sources for the hero and GIF (render.py re-records them)
 CHANGELOG.md                     what changed in each version
 LICENSE, NOTICE                  Apache-2.0
 SKILL.md                         instructions for Claude Code
@@ -151,7 +154,7 @@ The code is free under Apache-2.0. On Cloudflare, the free Workers plan covers r
 
 The full history is in [CHANGELOG.md](CHANGELOG.md), in Keep a Changelog format.
 
-**Latest: [1.0.2] - 2026-10-01.** README rewritten to open with the problem; reference moved to docs/. No code changes. **Before that, [1.0.0] - 2026-09-30.** The backend is now swappable: a self-hosted Node server on SQLite joins the Cloudflare function, with token-protected owner endpoints, a Dockerfile and opt-in CORS.
+**Latest: [1.0.3] - 2026-10-01.** New README hero and demo GIF, recorded from the real UI. No behaviour changes. **Before that, [1.0.0] - 2026-09-30.** The backend is now swappable: a self-hosted Node server on SQLite joins the Cloudflare function, with token-protected owner endpoints, a Dockerfile and opt-in CORS.
 
 ## Contributing
 

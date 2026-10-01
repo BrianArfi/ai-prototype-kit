@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI Prototype Kit hero</title>
+<!-- Rendered to docs/hero.png by render.py (1600x800 CSS px at 2x).
+     before.png and after.png are real screenshots of examples/coffee-order.html:
+     before = served by publish.py serve with Dina's pinned comment,
+     after  = the same page once a real /revise-from-comments run (Claude Code) made Large the default.
+     The AI card quotes the report row that run printed. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#F1F3EE;--field:#0D453E;--ink:#072B27;--signal:#C8F751;
+        --sans:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+        --mono:'JetBrains Mono',ui-monospace,'Cascadia Mono',Consolas,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1600px;height:800px;overflow:hidden}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);position:relative}
+
+  .copy{position:absolute;left:72px;top:220px;width:520px}
+  .kicker{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--field);letter-spacing:.02em;margin-bottom:28px;
+    display:inline-flex;align-items:center;gap:12px}
+  .kicker i{width:14px;height:14px;border-radius:3px;background:var(--signal);border:3px solid var(--ink)}
+  h1{font-size:64px;line-height:1.05;font-weight:900;letter-spacing:-.035em;white-space:nowrap}
+  h1 .hl{position:relative;z-index:0;white-space:nowrap}
+  h1 .hl:after{content:"";position:absolute;left:-6px;right:-6px;bottom:4px;height:24px;background:var(--signal);z-index:-1;border-radius:4px}
+
+  .link{margin-top:48px;display:inline-flex;align-items:center;gap:14px;background:#fff;border:3px solid var(--ink);
+    border-radius:16px;padding:16px 22px;font-family:var(--mono);font-size:18px;font-weight:500;white-space:nowrap;box-shadow:6px 6px 0 var(--ink)}
+  .link svg{flex:none}
+  .same{margin-top:22px;font-size:26px;font-weight:700;color:var(--field)}
+
+  .phone{position:absolute;top:118px;width:300px;height:600px;border-radius:38px;overflow:hidden;
+    box-shadow:0 30px 60px rgba(7,43,39,.22)}
+  .phone img{width:300px;display:block}
+  .before{left:600px}
+  .after{left:1240px}
+
+  .tag{position:absolute;top:70px;font-family:var(--mono);font-size:17px;font-weight:700;color:var(--field);
+    background:#fff;border:2px solid var(--field);border-radius:999px;padding:5px 14px}
+  .tag.v1{left:600px}
+  .tag.v2{left:1240px;background:var(--signal);border-color:var(--ink);color:var(--ink)}
+
+  /* pinned comment card, tied to the real pin on "Large" */
+  .card{position:absolute;left:926px;top:272px;width:262px;background:#fff;border:3px solid var(--ink);border-radius:18px;
+    padding:16px 18px 18px;box-shadow:6px 6px 0 var(--ink)}
+  .card .who{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px}
+  .card .av{width:32px;height:32px;border-radius:50%;background:var(--field);color:#fff;display:grid;place-items:center;font-size:16px}
+  .card .pin{margin-left:auto;font-family:var(--mono);font-size:14px;color:var(--field);font-weight:700}
+  .card p{margin-top:10px;font-size:22px;line-height:1.25;font-weight:500}
+  .leader{position:absolute;left:904px;top:336px;width:24px;height:3px;background:var(--ink)}
+
+  /* AI revised note */
+  .ai{position:absolute;left:926px;top:470px;width:262px;background:var(--ink);color:#E8EDE6;border-radius:18px;padding:16px 18px 18px;
+    font-family:var(--mono);font-size:16px;line-height:1.55;box-shadow:0 18px 40px rgba(7,43,39,.25)}
+  .ai .chip{display:inline-block;background:var(--signal);color:var(--ink);font-family:var(--sans);font-weight:900;font-size:22px;
+    border-radius:10px;padding:4px 12px;margin-bottom:12px;letter-spacing:-.01em}
+  .ai .ok{color:var(--signal);font-weight:700}
+  .arrow{position:absolute;left:1194px;top:540px}
+
+  /* highlight the change on the revised phone */
+  .ring{position:absolute;left:1429px;top:340px;width:93px;height:49px;border:5px solid var(--signal);border-radius:14px;
+    box-shadow:0 0 0 3px var(--ink)}
+  .ring2{position:absolute;left:1258px;top:645px;width:264px;height:50px;border:5px solid var(--signal);border-radius:16px;
+    box-shadow:0 0 0 3px var(--ink)}
+</style>
+</head>
+<body>
+  <div class="copy">
+    <div class="kicker"><i></i>ai-prototype-kit</div>
+    <h1>Comment on&nbsp;it.<br><span class="hl">AI revises it.</span></h1>
+    <div class="link">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0D453E" stroke-width="2.4" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
+      your-project.pages.dev/coffee-order
+    </div>
+    <div class="same">Same link, every version.</div>
+  </div>
+
+  <div class="tag v1">v1 &middot; reviewed</div>
+  <div class="phone before"><img src="before.png" alt=""></div>
+
+  <div class="leader"></div>
+  <div class="card">
+    <div class="who"><span class="av">D</span>Dina<span class="pin">on Large</span></div>
+    <p>Default to Large, most people pick it</p>
+  </div>
+
+  <div class="ai">
+    <span class="chip">AI revised</span><br>
+    &gt; /revise-from-comments<br>
+    1 | Dina | <span class="ok">Done</span>: Large is now selected by default
+  </div>
+  <svg class="arrow" width="40" height="40" style="z-index:2" viewBox="0 0 40 40"><path d="M4 20h28M22 9l11 11-11 11" fill="none" stroke="#072B27" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+
+  <div class="tag v2">v2 &middot; same link</div>
+  <div class="phone after"><img src="after.png" alt=""></div>
+  <div class="ring"></div>
+  <div class="ring2"></div>
+</body>
+</html>

@@ -237,6 +237,7 @@ h1.title{font-size:15px;font-weight:600;color:var(--muted);margin:0 0 16px;lette
   }
   segment('size'); segment('milk'); segment('slots');
   document.getElementById('shot').addEventListener('change', price);
+  price();  // the shown price always follows the selected defaults
 
   document.addEventListener('click', function (e) {
     var go = e.target.closest('[data-go]'); if (go) { pause(); show(Number(go.dataset.go)); return; }

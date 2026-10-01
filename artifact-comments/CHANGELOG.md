@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-10-01
+
+### Changed
+- README visuals only. The hero gives the page screenshot more room and uses the shared family eyebrow and plain paper. The demo GIF is recorded inside the same browser frame as the hero, with a larger cursor. It shows a reply under a different name and a jump from the list to a comment on another tab (`docs/src/sample.html` now has tabs and an adapter). The client's version constant moves to 1.0.3. No behaviour changes.
+
 ## [1.0.2] - 2026-10-01
 
 ### Changed

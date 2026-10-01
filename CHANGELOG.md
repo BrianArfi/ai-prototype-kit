@@ -3,6 +3,15 @@
 All notable changes to the AI Prototype Kit are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] - 2026-10-01
+
+### Changed
+- README visuals. `docs/demo.gif` now starts on the Oat latte screen, pins Dina's comment on Large, shows the report row a real `/revise-from-comments` run printed, and ends on the same link with Large selected at $5.10. It is recorded with `docs/src/record_demo.py`. `docs/hero.png` uses real before and after screenshots from that run, plain paper and the shared eyebrow mark.
+- Bundled artifact-comments updated to v1.0.3 (README visuals only).
+
+### Fixed
+- `examples/coffee-order.html` shows the price for the selected default size on load. Before, a page whose default size was not Medium still showed the Medium price until the reader clicked a size.
+
 ## [0.1.1] - 2026-10-01
 
 ### Changed
@@ -10,6 +19,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - The tagline now says it is a Claude Code kit. The quick start adds the revise step.
 - New hero GIF, `docs/revise-loop.gif`: a comment pinned on the coffee-order prototype, `/revise-from-comments`, and the same link reloaded with the change.
 - Bundled artifact-comments updated to v1.0.2 (README only).
+- New README visuals: `docs/hero.png` (rendered from `docs/src/hero.html` with `docs/src/render.py`, using real screenshots of the example) and `docs/demo.gif` (a real click-through and comment on the served example). `docs/revise-loop.gif` moves to the Example section.
 
 ## [0.1.0] - 2026-09-30
 

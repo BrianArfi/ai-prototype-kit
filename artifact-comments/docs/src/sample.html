@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Onboarding redesign: proposal</title>
+<!-- A typical AI-built explainer page, used to capture the README hero and demo GIF. -->
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.55 "Segoe UI",system-ui,-apple-system,sans-serif;color:#1f2328;background:#fbfbf9}
+  main{max-width:640px;margin:0 0 0 24px;padding:40px 28px 120px}
+  .kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6a6f76;font-weight:600}
+  h1{font-size:34px;line-height:1.15;margin:8px 0 12px;letter-spacing:-.01em}
+  .lead{font-size:18px;color:#3b4047;margin:0 0 28px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:0 0 30px}
+  .stat{background:#fff;border:1px solid #e6e6e1;border-radius:12px;padding:16px 18px}
+  .stat b{display:block;font-size:28px;line-height:1.1;letter-spacing:-.01em}
+  .stat span{font-size:13px;color:#6a6f76}
+  h2{font-size:20px;margin:0 0 12px}
+  .steps{display:flex;gap:10px;margin:0 0 30px}
+  .step{flex:1;background:#fff;border:1px solid #e6e6e1;border-radius:12px;padding:14px 16px;font-size:14px}
+  .step i{font-style:normal;display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6a6f76;font-weight:700;margin-bottom:4px}
+  .step p{margin:0;color:#3b4047}
+  .cta{display:flex;align-items:center;gap:16px}
+  .cta button{font:600 15px/1 inherit;font-family:inherit;background:#2f5bd8;color:#fff;border:0;border-radius:10px;padding:13px 20px}
+  .cta small{color:#6a6f76}
+  .tabs{display:flex;gap:8px;margin:0 0 22px}
+  .tabs button{font:600 14px/1 inherit;font-family:inherit;border:1px solid #d6d6cf;background:#fff;color:#3b4047;border-radius:999px;padding:8px 14px}
+  .tabs button.on{background:#1f2328;border-color:#1f2328;color:#fff}
+  .tab{display:none}.tab.on{display:block}
+  .plan{background:#fff;border:1px solid #e6e6e1;border-radius:12px;padding:16px 18px;margin:0 0 14px}
+  .plan b{display:block;font-size:15px;margin-bottom:2px}
+  .plan p{margin:0;color:#3b4047}
+</style>
+</head>
+<body>
+<main>
+  <div class="kicker">Proposal, draft 2</div>
+  <h1 id="title">A shorter onboarding flow</h1>
+  <div class="tabs" id="tabs"><button type="button" data-tab="proposal" class="on">Proposal</button><button type="button" data-tab="rollout">Rollout plan</button></div>
+  <div class="tab on" data-tab="proposal">
+  <p class="lead" id="lead">New users reach their first project in three steps instead of seven. We drop the tour and ask for the workspace name last.</p>
+
+  <div class="stats">
+    <div class="stat" id="s1"><b>3 steps</b><span>down from 7</span></div>
+    <div class="stat" id="s2"><b>2 min</b><span>to the first project</span></div>
+    <div class="stat" id="s3"><b>1 screen</b><span>for the invite step</span></div>
+  </div>
+
+  <h2>The new flow</h2>
+  <div class="steps">
+    <div class="step" id="st1"><i>Step one</i><p>Sign up with email or Google</p></div>
+    <div class="step" id="st2"><i>Step two</i><p>Pick a template</p></div>
+    <div class="step" id="st3"><i>Step three</i><p>Invite the team, or skip</p></div>
+  </div>
+
+  <div class="cta"><button id="cta" type="button">Start the pilot</button><small>Pilot with 10% of new sign-ups</small></div>
+  </div>
+  <div class="tab" data-tab="rollout">
+    <div class="plan" id="pilot"><b>Pilot</b><p>November, with 10% of new sign-ups. We compare time to first project against the old flow.</p></div>
+    <div class="plan" id="launch"><b>Full launch</b><p>Two weeks after the pilot, if the time to first project is under 3 minutes.</p></div>
+  </div>
+</main>
+<script>
+  /* Tabs, plus the adapter that lets a comment on a hidden tab bring its tab back. */
+  var tabs = document.getElementById('tabs'), current = 'proposal';
+  function show(t) {
+    current = t;
+    [].forEach.call(document.querySelectorAll('[data-tab]'), function (n) { n.classList.toggle('on', n.dataset.tab === t); });
+  }
+  tabs.onclick = function (e) { var b = e.target.closest('button'); if (b) show(b.dataset.tab); };
+  window.ArtifactComments = {
+    state: function () { return { tab: current }; },
+    restore: function (s) { if (s && s.tab) show(s.tab); },
+    label: function (el) { return el.closest('.tab') ? 'Tab: ' + tabs.querySelector('.on').textContent : ''; }
+  };
+</script>
+<script src="/artifact-comments.js" data-slug="onboarding" defer></script>
+</body>
+</html>

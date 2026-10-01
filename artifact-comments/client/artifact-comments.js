@@ -26,7 +26,7 @@
   window.__artifactCommentsLoaded = true;
 
   // ---------------------------------------------------------------- config
-  var VERSION = '1.0.2';    // keep in step with CHANGELOG.md and server/node/package.json
+  var VERSION = '1.0.3';    // keep in step with CHANGELOG.md and server/node/package.json
   var script = document.currentScript || {};
   var ds = script.dataset || {};
   function A() { return window.ArtifactComments || {}; } // read late: a page may register after us

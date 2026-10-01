@@ -1,6 +1,6 @@
 {
   "name": "artifact-comments-server",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Self-hosted backend for artifact-comments: one file, Node's built-in SQLite, no dependencies.",
   "license": "Apache-2.0",
   "private": true,

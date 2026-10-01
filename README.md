@@ -3,9 +3,9 @@
 **A Claude Code kit: build a prototype, share it as one link, collect comments pinned on the exact spot, and let Claude revise from them.**
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Version 0.1.1](https://img.shields.io/badge/version-0.1.1-green.svg)](CHANGELOG.md)
+[![Version 0.1.2](https://img.shields.io/badge/version-0.1.2-green.svg)](CHANGELOG.md)
 
-![On the coffee-order prototype, Dina pins "Default to Large" on the size picker. /revise-from-comments reads the comment, edits the page and reports Done. The same link, reloaded, shows Large selected and the price updated to $5.10](docs/revise-loop.gif)
+![Comment on it. AI revises it. Left: the coffee-order prototype on a phone, with Dina's comment "Default to Large, most people pick it" pinned on the Large button. Middle: the report row a real /revise-from-comments run printed, "1 | Dina | Done: Large is now selected by default". Right: the same link as v2, with Large selected and the price at $5.10](docs/hero.png)
 
 ## Why
 
@@ -18,6 +18,8 @@ AI can build a clickable prototype or an explainer page in minutes. But a shared
 - **Lets reviewers comment like in Figma:** click any part, write, reply. No account needed.
 - **Revises from the comments** with `/revise-from-comments`, and reports what it did for each one.
 - **Keeps your data yours:** it runs on your free Cloudflare account or your own server.
+
+![The real coffee-order prototype served by publish.py serve, on the Oat latte screen: Comment, a click on the Large button, Dina types "Default to Large, most people pick it" and posts, and a numbered pin stays on Large. Then the report row a real /revise-from-comments run printed, Done, and the same link reloaded with Large selected and the price at $5.10](docs/demo.gif)
 
 ## Quick start
 
@@ -44,6 +46,8 @@ A reviewer pins "Default to Large" on the drink screen. You run `/revise-from-co
 | 2 | Sam | Screen 3: Checkout | Remove the service fee line | Not applied: the fee is a business decision, needs your call |
 
 Then `/publish` again. Same link, new version.
+
+![The full loop on the coffee-order prototype: Dina pins "Default to Large" on the size picker, /revise-from-comments edits the page and reports Done, and the same link, reloaded, shows Large selected and the price at $5.10](docs/revise-loop.gif)
 
 ---
 
@@ -76,7 +80,7 @@ More questions: [docs/faq.md](docs/faq.md).
 
 ## Changelog
 
-The full history is in [CHANGELOG.md](CHANGELOG.md). **Latest: [0.1.1] - 2026-10-01**: README rewritten to open with the problem, reference moved to docs/, and a new hero GIF of the full revise loop. It bundles artifact-comments v1.0.2. No code changes. **Before that, [0.1.0] - 2026-09-30**, the first release.
+The full history is in [CHANGELOG.md](CHANGELOG.md). **Latest: [0.1.2] - 2026-10-01**: new README hero and demo GIF from a real comment and a real `/revise-from-comments` run, and the example's price now follows its default size. It bundles artifact-comments v1.0.3. **Before that, [0.1.0] - 2026-09-30**, the first release.
 
 ## License
 
