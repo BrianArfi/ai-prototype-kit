@@ -3,6 +3,11 @@
 All notable changes to the AI Prototype Kit are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- README reorganised around the problem: a concrete scenario, who it is for and not for, a before/after table, and a four-step how-it-works. New explainer GIFs `docs/hero.gif`, `docs/before-after.gif` and `docs/how-it-works.gif` (illustrations, built from the real before/after screenshots), rendered with `docs/src/render_gifs.py`. The real-run `docs/demo.gif` and `docs/revise-loop.gif` are unchanged.
+
 ## [0.1.2] - 2026-10-01
 
 ### Changed

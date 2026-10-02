@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI Prototype Kit how it works</title>
+<!-- Rendered to docs/how-it-works.gif by render_gifs.py (1200x600, 10 s loop). Illustration of the loop
+     described in docs/how-it-works.md: build, publish one link, reviewers pin comments,
+     /revise-from-comments, publish again to the same link. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#F1F3EE;--field:#0D453E;--ink:#072B27;--signal:#C8F751;--sans:'Archivo',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1200px;height:600px;overflow:hidden}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);position:relative}
+  .a{animation-duration:.5s;animation-fill-mode:both;animation-timing-function:cubic-bezier(.2,.8,.2,1)}
+  @keyframes up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  @keyframes fadeout{from{opacity:1}to{opacity:0}}
+  @keyframes pop{0%{opacity:0;transform:scale(.4)}70%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+  @keyframes draw{0%{stroke-dashoffset:var(--len);opacity:0}6%{opacity:1}100%{stroke-dashoffset:0;opacity:1}}
+  @keyframes travel{0%{offset-distance:0%;opacity:0}8%{opacity:1}92%{opacity:1}100%{offset-distance:100%;opacity:0}}
+
+  .title{position:absolute;left:16px;top:30px;font-size:34px;font-weight:900;letter-spacing:-.03em}
+  .title .hl{position:relative;z-index:0}
+  .title .hl:after{content:"";position:absolute;left:-4px;right:-4px;bottom:3px;height:13px;background:var(--signal);z-index:-1;border-radius:3px}
+  .card{position:absolute;top:104px;width:262px;height:286px;background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:6px 6px 0 var(--ink);padding:16px 16px}
+  .n{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--signal);font-family:var(--mono);font-weight:700;font-size:18px}
+  .card h3{display:inline-block;margin-left:8px;font-size:25px;font-weight:900;letter-spacing:-.02em;vertical-align:middle}
+  .cmd{margin-top:12px;font-family:var(--mono);font-size:15.5px;font-weight:700;color:var(--ink);background:var(--signal);white-space:nowrap;display:inline-block;padding:3px 8px;border-radius:6px}
+  .body{margin-top:12px;font-size:18px;line-height:1.3;color:var(--field);font-weight:500}
+  .vis{position:absolute;left:16px;right:16px;bottom:16px;height:62px}
+
+  /* visuals inside cards */
+  .file{display:flex;align-items:center;gap:10px;white-space:nowrap;font-family:var(--mono);font-size:15.5px;border:2px solid var(--field);border-radius:10px;padding:10px 12px;color:var(--field);height:100%}
+  .link{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:16px;border:2px solid var(--ink);border-radius:10px;padding:0 10px;height:100%;position:relative;background:#fff}
+  .ver{margin-left:auto;font-weight:700;border:2px solid var(--ink);border-radius:999px;padding:1px 9px;font-size:15px;position:relative;width:44px;height:26px}
+  .ver span{position:absolute;inset:0;display:grid;place-items:center}
+  .ver .v2{background:var(--signal);border-radius:999px}
+  .mini{height:100%;border:2px solid var(--field);border-radius:10px;position:relative;background:#FAF8F4}
+  .mini b{position:absolute;height:12px;border-radius:4px;background:#DDD5C9}
+  .pin{position:absolute;width:26px;height:26px;border-radius:50% 50% 50% 2px;background:var(--field);color:#fff;font-family:var(--mono);font-size:14px;font-weight:700;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 0 0 2px var(--ink)}
+  .term{height:100%;background:var(--ink);border-radius:10px;font-family:var(--mono);font-size:15px;color:#DDE7E2;padding:7px 10px;line-height:1.35}
+  .ok{color:var(--ink);background:var(--signal);padding:0 4px;border-radius:3px;font-weight:700}
+  .na{color:#FFD9A8;font-weight:700}
+
+  svg.flow{position:absolute;left:0;top:0;pointer-events:none}
+  .ar{fill:none;stroke:var(--ink);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:var(--len);animation:draw .45s ease-out both}
+  .loop{fill:none;stroke:var(--field);stroke-width:4;stroke-dasharray:var(--len);stroke-linecap:round;animation:draw 1.1s ease-in-out both}
+  .dot{position:absolute;left:0;top:0;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--ink);border:4px solid var(--signal);
+    offset-path:path('M1053 394 C1053 470 1000 482 940 482 L520 482 C470 482 449 470 449 394');offset-rotate:0deg;animation:travel 1.1s ease-in-out both}
+  .looplabel{position:absolute;left:571px;top:460px;background:var(--signal);border:3px solid var(--ink);border-radius:999px;padding:6px 18px;font-family:var(--mono);font-weight:700;font-size:19px}
+  .foot{position:absolute;left:16px;top:540px;font-size:22px;font-weight:700;color:var(--field)}
+  .cap{position:absolute;right:16px;bottom:10px;font-family:var(--mono);font-size:13px;color:var(--field);opacity:.7}
+  .cover{position:absolute;inset:0;background:var(--paper);z-index:9}
+</style>
+</head>
+<body>
+  <div class="title a" style="animation-name:fade;animation-delay:0s">One link, <span class="hl">comment and revise until it is right</span></div>
+
+  <!-- 1 Build -->
+  <div class="card a" style="left:16px;animation-name:up;animation-delay:.3s">
+    <span class="n">1</span><h3>Build</h3><br>
+    <span class="cmd">/mockup</span>
+    <div class="body">Claude builds a clickable prototype from plain words.</div>
+    <div class="vis"><div class="file">&lt;/&gt; coffee-order.html</div></div>
+  </div>
+  <!-- 2 Publish -->
+  <div class="card a" style="left:318px;animation-name:up;animation-delay:1.3s">
+    <span class="n">2</span><h3>Publish</h3><br>
+    <span class="cmd">/publish</span>
+    <div class="body">One link anyone can open, on a phone or a laptop.</div>
+    <div class="vis"><div class="link">/coffee-order
+      <span class="ver"><span>v1</span><span class="v2 a" style="animation-name:pop;animation-delay:7.0s">v2</span></span></div></div>
+  </div>
+  <!-- 3 Review -->
+  <div class="card a" style="left:620px;animation-name:up;animation-delay:2.3s">
+    <span class="n">3</span><h3>Comment</h3><br>
+    <span class="cmd" style="background:#fff;border:2px solid var(--ink);padding:1px 7px">click, pin, write</span><div class="body">Reviewers click the exact part and write. No account needed.</div>
+    <div class="vis"><div class="mini"><b style="left:10px;top:10px;width:90px"></b><b style="left:10px;top:34px;width:60px"></b><b style="left:120px;top:34px;width:60px"></b>
+      <span class="pin a" style="left:160px;top:6px;animation-name:pop;animation-delay:3.0s">1</span>
+      <span class="pin a" style="left:60px;top:22px;animation-name:pop;animation-delay:3.4s">2</span></div></div>
+  </div>
+  <!-- 4 Revise -->
+  <div class="card a" style="left:922px;animation-name:up;animation-delay:4.0s">
+    <span class="n">4</span><h3>Revise</h3><br>
+    <span class="cmd">/revise-from-comments</span>
+    <div class="body">Edits the page, reports per comment.</div>
+    <div class="vis"><div class="term">
+      <div class="a" style="animation-name:fade;animation-delay:4.7s">1 Dina <span class="ok">Done</span></div>
+      <div class="a" style="animation-name:fade;animation-delay:5.1s">2 Sam <span class="na">Not applied</span></div></div></div>
+  </div>
+
+  <svg class="flow" width="1200" height="600">
+    <path class="ar" style="--len:60;animation-delay:1.0s" d="M286 247 L310 247 M300 237 L310 247 L300 257"/>
+    <path class="ar" style="--len:60;animation-delay:2.0s" d="M588 247 L612 247 M602 237 L612 247 L602 257"/>
+    <path class="ar" style="--len:60;animation-delay:3.7s" d="M890 247 L914 247 M904 237 L914 247 L904 257"/>
+    <path class="loop" style="--len:900;animation-delay:5.7s" d="M1053 394 C1053 470 1000 482 940 482 L520 482 C470 482 449 470 449 394"/>
+    <path class="ar" style="--len:40;animation-delay:6.7s" d="M437 408 L449 394 L461 408"/>
+  </svg>
+  <div class="dot a" style="animation-name:travel;animation-delay:5.7s;animation-duration:1.1s;animation-timing-function:ease-in-out"></div>
+  <div class="looplabel a" style="animation-name:pop;animation-delay:6.6s">/publish again: same link, v2</div>
+  <div class="foot a" style="animation-name:up;animation-delay:7.3s">Reviewers reload the link they already have. Repeat until everyone agrees.</div>
+  <div class="cap">Illustration</div>
+  <div class="cover a" style="animation-name:fade;animation-delay:9.5s;animation-duration:.5s;animation-timing-function:linear"></div>
+</body>
+</html>

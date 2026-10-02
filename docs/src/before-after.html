@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI Prototype Kit before and after</title>
+<!-- Rendered to docs/before-after.gif by render_gifs.py (1100x620, 9 s loop). Illustration.
+     The "after" phone is the real after.png screenshot; the report rows are the example rows from
+     commands/revise-from-comments.md (Dina's row is the line a real run printed). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#F1F3EE;--field:#0D453E;--ink:#072B27;--signal:#C8F751;--sans:'Archivo',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1100px;height:620px;overflow:hidden}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);position:relative}
+  .a{animation-duration:.5s;animation-fill-mode:both;animation-timing-function:cubic-bezier(.2,.8,.2,1)}
+  @keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  @keyframes pop{0%{opacity:0;transform:scale(.7)}70%{opacity:1;transform:scale(1.05)}100%{opacity:1;transform:scale(1)}}
+  @keyframes wipe{0%{clip-path:inset(0 100% 0 0)}17%{clip-path:inset(0 0 0 0)}87%{clip-path:inset(0 0 0 0)}100%{clip-path:inset(0 100% 0 0)}}
+  @keyframes bar{0%{left:-10px}17%{left:1100px}87%{left:1100px}100%{left:-10px}}
+  @keyframes shake{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+
+  .pane{position:absolute;inset:0;padding:34px 44px}
+  .label{display:inline-block;font-family:var(--mono);font-weight:700;font-size:18px;border:2px solid var(--ink);border-radius:999px;padding:5px 14px;background:#fff}
+  .after .label{background:var(--signal)}
+  h2{font-size:38px;font-weight:900;letter-spacing:-.03em;margin:14px 0 22px}
+
+  /* BEFORE: feedback scattered */
+  .before{background:var(--paper)}
+  .chat{position:absolute;background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:6px 6px 0 var(--ink);padding:14px 18px;font-size:20px;line-height:1.3}
+  .chat .src{font-family:var(--mono);font-size:15px;color:var(--field);font-weight:700;margin-bottom:6px}
+  .shot{width:150px;height:90px;border-radius:10px;background:#E9E2D8;position:relative;margin-top:8px;overflow:hidden}
+  .shot b{position:absolute;left:12px;top:14px;width:80px;height:14px;background:#C9BFB0;border-radius:4px}
+  .shot s{position:absolute;left:12px;top:40px;width:120px;height:30px;background:#D7CEC1;border-radius:6px}
+  .shot i{position:absolute;left:58px;top:26px;width:86px;height:56px;border:4px solid #E0473C;border-radius:50%;transform:rotate(-12deg)}
+  .file{position:absolute;left:640px;top:452px;font-family:var(--mono);font-size:18px;background:#fff;border:2px dashed var(--field);border-radius:12px;padding:12px 16px;color:var(--field)}
+  .file div{margin:2px 0}
+  .file s{opacity:.55}
+
+  /* AFTER */
+  .after{background:#E6EBDF;clip-path:inset(0 100% 0 0);animation:wipe 7.2s linear 1.6s both}
+  .phone{position:absolute;left:44px;top:132px;width:220px;height:440px;border-radius:30px;overflow:hidden;box-shadow:0 20px 40px rgba(7,43,39,.2)}
+  .phone img{width:220px;display:block}
+  .ring{position:absolute;left:181px;top:293px;width:70px;height:39px;border:4px solid var(--signal);border-radius:12px;box-shadow:0 0 0 2px var(--ink)}
+  .term{position:absolute;left:310px;top:132px;width:746px;background:var(--ink);border-radius:14px;overflow:hidden;box-shadow:6px 6px 0 var(--field)}
+  .chrome{height:34px;background:#0A3833;display:flex;align-items:center;gap:8px;padding:0 14px}
+  .chrome i{width:12px;height:12px;border-radius:50%;background:#2C5C55}
+  .chrome span{margin-left:8px;color:#9DB7AF;font-family:var(--mono);font-size:15px}
+  .rows{padding:14px 18px 18px;font-family:var(--mono);font-size:18px;color:#DDE7E2;line-height:1.5}
+  .rows .p{color:var(--signal)}
+  .row{display:grid;grid-template-columns:28px 64px 1fr;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #1E4A44}
+  .ok{color:var(--ink);background:var(--signal);padding:0 5px;border-radius:4px;font-weight:700}
+  .no{color:#FFD9A8;font-weight:700}
+  .link{position:absolute;left:310px;top:410px;display:inline-flex;align-items:center;gap:12px;background:#fff;border:3px solid var(--ink);border-radius:14px;padding:12px 18px;
+    font-family:var(--mono);font-size:19px;box-shadow:6px 6px 0 var(--ink)}
+  .v2{background:var(--signal);border:2px solid var(--ink);border-radius:999px;padding:2px 10px;font-weight:700;font-size:16px}
+  .wbar{position:absolute;top:0;bottom:0;width:10px;background:var(--signal);border-left:3px solid var(--ink);border-right:3px solid var(--ink);z-index:5;left:-10px;animation:bar 7.2s linear 1.6s both}
+  .note{position:absolute;left:312px;top:496px;width:760px;font-size:21px;font-weight:700;color:var(--field)}
+  .cap{position:absolute;right:16px;bottom:10px;font-family:var(--mono);font-size:13px;color:var(--field);opacity:.7;z-index:6}
+</style>
+</head>
+<body>
+  <div class="pane before">
+    <span class="label">BEFORE</span>
+    <h2>Feedback lands everywhere except the page.</h2>
+    <div class="chat" style="left:44px;top:150px;width:260px;transform:rotate(-1.5deg)">
+      <div class="src">chat &middot; Dina</div>this one??
+      <div class="shot"><b></b><s></s><i></i></div>
+    </div>
+    <div class="chat" style="left:340px;top:162px;width:300px;transform:rotate(1deg)">
+      <div class="src">email &middot; Sam</div>The thing top left, can it be smaller?
+    </div>
+    <div class="chat" style="left:680px;top:150px;width:220px;transform:rotate(-1deg)">
+      <div class="src">group chat</div>Looks good!
+    </div>
+    <div class="chat" style="left:120px;top:370px;width:420px;transform:rotate(.8deg)">
+      <div class="src">you, to the AI</div>OK, starting again. Here is everything they said, from the top...
+    </div>
+    <div class="file">
+      <div><s>coffee-order.html</s></div>
+      <div><s>coffee-order-v2.html</s></div>
+      <div>coffee-order-v2-final.html</div>
+    </div>
+  </div>
+
+  <div class="pane after">
+    <span class="label">AFTER</span>
+    <h2>Pinned on the part. Revised from it. Same link.</h2>
+    <div class="phone"><img src="after.png" alt=""></div>
+    <div class="ring a" style="animation-name:pop;animation-delay:3.2s"></div>
+    <div class="term a" style="animation-name:up;animation-delay:2.9s">
+      <div class="chrome"><i></i><i></i><i></i><span>Claude Code</span></div>
+      <div class="rows">
+        <div><span class="p">&gt; </span>/revise-from-comments coffee-order</div>
+        <div class="row a" style="animation-name:up;animation-delay:3.5s"><span>1</span><span>Dina</span><span>Default to Large &rarr; <span class="ok">Done</span>: Large is now selected by default</span></div>
+        <div class="row a" style="animation-name:up;animation-delay:4.0s"><span>2</span><span>Sam</span><span>Remove the service fee line &rarr; <span class="no">Not applied</span>: the fee is a business decision, needs your call</span></div>
+      </div>
+    </div>
+    <div class="link a" style="animation-name:up;animation-delay:4.6s">your-project.pages.dev/coffee-order <span class="v2">v2</span></div>
+    <div class="note a" style="animation-name:up;animation-delay:5.0s">Reviewers reload the link they already have. Their pins stay on the page.</div>
+  </div>
+  <div class="wbar"></div>
+  <div class="cap">Illustration</div>
+</body>
+</html>
