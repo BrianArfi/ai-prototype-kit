@@ -59,8 +59,8 @@ class Server:
     backend='wrangler' runs the Pages Function under `wrangler pages dev` with a
     local KV; backend='node' runs server/node/server.mjs on a new SQLite file.
     Both serve the same site folder and allow CORS for `allow_origin` (by
-    default http://localhost:<port>, a second origin for the same server). The
-    node server enables its owner endpoints with `token`.
+    default http://localhost:<port>, a second origin for the same server).
+    `token` is the owner key on both: OWNER_KEY on wrangler, --token on node.
     """
 
     def __init__(self, pages=None, backend='wrangler', allow_origin=None, token='e2e-owner-token'):
@@ -101,7 +101,7 @@ class Server:
             if not npx:
                 sys.exit('npx not found: install Node.js to run wrangler')
             cmd = [npx, '--yes', 'wrangler@4', 'pages', 'dev', 'site', '--kv=COMMENTS',
-                   '--binding', f'ALLOWED_ORIGINS={self.allow_origin}',
+                   '--binding', f'ALLOWED_ORIGINS={self.allow_origin}', f'OWNER_KEY={self.token}',
                    '--port', str(self.port), '--ip', '127.0.0.1', '--persist-to', 'state']
         else:
             node = shutil.which('node') or shutil.which('node.exe')
@@ -149,6 +149,13 @@ class Server:
                 return r.status, json.load(r)
         except urllib.error.HTTPError as e:
             return e.code, json.loads(e.read() or b'{}')
+
+    def delete(self, body, owner=None):
+        headers = {'content-type': 'application/json'}
+        if owner:
+            headers['authorization'] = f'Bearer {owner}'
+        st, _, raw = self.raw('DELETE', data=json.dumps(body).encode(), headers=headers)
+        return st, json.loads(raw or b'{}')
 
     def get(self, slug):
         with urllib.request.urlopen(f'{self.base}/api/comments?slug={slug}', timeout=10) as r:
@@ -200,7 +207,8 @@ async def open_page(browser, url, **ctx):
     page = await context.new_page()
     page.errors = []
     page.on('pageerror', lambda e: page.errors.append(str(e)))
-    page.on('dialog', lambda d: asyncio.ensure_future(d.dismiss()))
+    page.accept_dialogs = False   # set True to answer confirm() with OK
+    page.on('dialog', lambda d: asyncio.ensure_future(d.accept() if page.accept_dialogs else d.dismiss()))
     await page.goto(url, wait_until='domcontentloaded')
     await page.wait_for_selector(f'{UI} .fab-add', state='attached')
     await page.wait_for_timeout(400)
@@ -460,7 +468,7 @@ async def suite(srv, c, headed=False):
              'Not sent' in await q.locator(f'{UI} .bubble').inner_text())
         await q.context.set_offline(False)
         await q.wait_for_timeout(300)            # the browser's "online" event retries by itself
-        retry = q.locator(f'{UI} .bubble .status .link')
+        retry = q.locator(f'{UI} .bubble .status .link', has_text='Retry')
         if await retry.count():
             await retry.click()
         await q.wait_for_timeout(900)
@@ -476,7 +484,7 @@ async def suite(srv, c, headed=False):
         failed = q.locator(f'{UI} .bubble .status.failed')
         c.ok('a server error marks the reply "Not sent"', await failed.count() == 1)
         await q.unroute('**/api/comments')
-        await failed.locator('.link').click()
+        await failed.locator('.link', has_text='Retry').click()
         await q.wait_for_timeout(900)
         c.ok('Retry sends it', await q.locator(f'{UI} .bubble .status.failed').count() == 0
              and any(x['text'] == 'Retry me' for x in srv.get('demo')))
@@ -520,9 +528,43 @@ async def suite(srv, c, headed=False):
         c.ok('CORS: a page on an allowed origin posts and reads through data-api',
              any(x['text'] == 'Posted from another origin' for x in srv.get('xorigin'))
              and 'Not sent' not in await xp.locator(f'{UI} .bubble').inner_text())
+
+        # deleting: authors delete their own comments, the owner deletes any
+        await deleting(srv, c, browser, p, q, url)
         await browser.close()
 
     # ---- the API itself
+    st, d = srv.post({'slug': 'del-api', 'name': 'a', 'text': 'mine'})
+    key, cid = d.get('key', ''), d['comment']['id']
+    c.ok('API: a new comment comes with a delete key, kept out of the stored record',
+         len(key) >= 32 and 'key' not in d['comment'] and 'key' not in srv.get('del-api')[0], d)
+    st, _ = srv.delete({'slug': 'del-api', 'id': cid})
+    st2, _ = srv.delete({'slug': 'del-api', 'id': cid, 'key': 'f' * 48})
+    st3, _ = srv.delete({'slug': 'del-api', 'id': cid}, owner='not-the-owner')
+    c.ok('API: delete without the key, with a wrong key, or a wrong owner key is refused',
+         (st, st2, st3) == (403, 403, 403) and len(srv.get('del-api')) == 1, (st, st2, st3))
+    st, d = srv.delete({'slug': 'del-api', 'id': cid, 'key': key})
+    c.ok('API: the author deletes with the key', st == 200 and d.get('deleted') == [cid] and srv.get('del-api') == [], d)
+    st, _ = srv.delete({'slug': 'del-api', 'id': cid, 'key': key})
+    c.ok('API: a deleted comment cannot be deleted again', st == 404, st)
+    _, other = srv.post({'slug': 'del-api', 'name': 'b', 'text': 'theirs'})
+    st, d = srv.delete({'slug': 'del-api', 'id': other['comment']['id'], 'key': key})
+    c.ok("API: one comment's key cannot delete another comment", st == 403, (st, d))
+    st, d = srv.delete({'slug': 'del-api', 'id': other['comment']['id']}, owner=srv.token)
+    c.ok('API: the owner key deletes any comment', st == 200 and srv.get('del-api') == [], (st, d))
+    _, root = srv.post({'slug': 'del-api', 'name': 'a', 'text': 'thread'})
+    srv.post({'slug': 'del-api', 'name': 'b', 'text': 'reply', 'parent': root['comment']['id']})
+    _, d = srv.post({'slug': 'del-api', 'name': 'c', 'text': 'still here'})
+    st, d = srv.delete({'slug': 'del-api', 'id': root['comment']['id'], 'key': root['key']})
+    left = [x['text'] for x in srv.get('del-api')]
+    c.ok('API: deleting a top comment takes its replies, and nothing else',
+         st == 200 and len(d.get('deleted', [])) == 2 and left == ['still here'], (d, left))
+    _, rp = srv.post({'slug': 'del-api', 'name': 'a', 'text': 'reply only', 'parent': d['deleted'][0]})
+    _, h, _ = srv.raw('OPTIONS', headers={'origin': srv.allow_origin, 'access-control-request-method': 'DELETE'})
+    c.ok('CORS: the preflight allows DELETE and the authorization header',
+         'DELETE' in h.get('access-control-allow-methods', '')
+         and 'authorization' in h.get('access-control-allow-headers', '').lower(), h)
+
     st, d = srv.post({'slug': 'api-test', 'text': 'no name'})
     c.ok('API: a comment without a name is refused', st == 400, (st, d))
     st, d = srv.post({'slug': 'Bad Slug!', 'name': 'x', 'text': 'y'})
@@ -574,6 +616,75 @@ async def suite(srv, c, headed=False):
     c.ok('API: 12 simultaneous posts, none lost', len(got) == 12, len(got))
 
 
+async def deleting(srv, c, browser, p, q, url):
+    """Delete from the page: the author's own comments, the owner's any comment."""
+    # p is Rina (thread 1 plus a reply), q is Omar (one reply in thread 1)
+    for page in (p, q):
+        await page.reload(wait_until='domcontentloaded')
+        await page.wait_for_timeout(900)
+    await q.locator(f'{UI} .pin').first.click()
+    msgs = q.locator(f'{UI} .bubble .msg')
+    owns = [await msgs.nth(i).locator('.del').count() for i in range(await msgs.count())]
+    c.ok("a reader sees Delete on their own comment only", owns == [0, 0, 1], owns)
+    await msgs.nth(2).locator('.del').click()        # confirm() dismissed: nothing happens
+    await q.wait_for_timeout(500)
+    c.ok('cancelling the confirm keeps the comment', any(x['text'] == 'Fine by me' for x in srv.get('demo')))
+    q.accept_dialogs = True
+    await msgs.nth(2).locator('.del').click()
+    await q.wait_for_timeout(800)
+    c.ok('the author deletes their reply from the page',
+         await msgs.count() == 2 and not any(x['text'] == 'Fine by me' for x in srv.get('demo')))
+    q.accept_dialogs = False
+
+    await p.evaluate('window.__artifactComments.refresh()')
+    await p.wait_for_timeout(600)
+    await p.locator(f'{UI} .pin').first.click()
+    await p.wait_for_timeout(300)
+    pm = p.locator(f'{UI} .bubble .msg')
+    owns = [await pm.nth(i).locator('.del').count() for i in range(await pm.count())]
+    c.ok('after a refresh, the other reader sees the reply gone and Delete on both of theirs', owns == [1, 1], owns)
+
+    # a failed comment can be discarded instead of retried
+    await q.keyboard.press('Escape')
+    await q.route('**/api/comments', lambda r: r.fulfill(status=500, body='{"error":"boom"}')
+                  if r.request.method == 'POST' else r.continue_())
+    await q.locator(f'{UI} .pin').first.click()
+    await q.locator(f'{UI} .bubble textarea').fill('Throw me away')
+    await q.locator(f'{UI} .bubble .primary').click()
+    await q.wait_for_timeout(600)
+    q.accept_dialogs = True
+    discard = q.locator(f'{UI} .bubble .status.failed .link', has_text='Discard')
+    await discard.click()
+    await q.wait_for_timeout(300)
+    q.accept_dialogs = False
+    await q.unroute('**/api/comments')
+    c.ok('an unsent comment can be discarded',
+         'Throw me away' not in await q.locator(f'{UI} .bubble').inner_text()
+         and await q.evaluate("localStorage.getItem('artifact-comments:pending:demo')") == '[]')
+
+    # the owner: ?ac-owner=<key> once, then Delete on every comment
+    before = len(srv.get('demo'))
+    o = await open_page(browser, url + '?ac-owner=' + srv.token + '#keep')
+    c.ok('owner mode: the key leaves the address bar at once',
+         'ac-owner' not in o.url and o.url.endswith('#keep') and await o.evaluate('window.__artifactComments.owner()'), o.url)
+    await o.locator(f'{UI} .pin').first.click()
+    om = o.locator(f'{UI} .bubble .msg')
+    c.ok('owner mode: Delete on every comment', await om.locator('.del').count() == await om.count() == 2)
+    o.accept_dialogs = True
+    await om.first.locator('.del').click()
+    await o.wait_for_timeout(900)
+    c.ok('owner mode: deleting a thread removes it with its reply',
+         len(srv.get('demo')) == before - 2 and not await o.locator(f'{UI} .bubble').is_visible()
+         and not any(x['text'] == 'Title is too long' for x in srv.get('demo')))
+    await o.reload(wait_until='domcontentloaded')
+    await o.wait_for_timeout(600)
+    c.ok('owner mode: remembered after a reload', await o.evaluate('window.__artifactComments.owner()'))
+    await o.locator(f'{UI} .fab-list').click()
+    await o.locator(f'{UI} .panel-foot .link', has_text='exit').click()
+    c.ok('owner mode: exit turns it off', not await o.evaluate('window.__artifactComments.owner()'))
+    c.ok('no script errors while deleting', not (q.errors + p.errors + o.errors), q.errors + p.errors + o.errors)
+
+
 def cli_node(srv, c):
     """Owner round trip through the node server's owner endpoints: post, list, delete, restore."""
     import re
@@ -596,6 +707,11 @@ def cli_node(srv, c):
     back = srv.get('cli-test')
     c.ok('CLI node: restore brings both back, unchanged',
          code == 0 and [x['id'] for x in back] == [rid, reply['comment']['id']] and back[0] == root['comment'], out)
+    _, mine = srv.post({'slug': 'cli-test', 'name': 'Cy', 'text': 'deleted from the page'})
+    srv.delete({'slug': 'cli-test', 'id': mine['comment']['id'], 'key': mine['key']})
+    code, out = srv.cli(*node, 'restore', '--slug', 'cli-test', '--id', mine['comment']['id'])
+    c.ok('CLI node: restore undoes a delete made from the page',
+         code == 0 and any(x['text'] == 'deleted from the page' for x in srv.get('cli-test')), out)
     code, out = srv.cli('--backend', 'node', '--base', srv.base, '--token', 'wrong-token', 'list')
     c.ok('CLI node: a wrong token is refused', code != 0 and '401' in out, out)
     code, out = srv.cli(*node, 'repair')

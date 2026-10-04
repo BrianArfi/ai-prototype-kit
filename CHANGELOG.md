@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-04
+
+### Added
+- Bundled artifact-comments updated to v1.1.0: delete from the page. Reviewers delete their own comments from the browser they posted them in, and the owner deletes any comment in owner mode (`?ac-owner=<owner key>`, the `OWNER_KEY` secret on Cloudflare or `--token` on Node). An unsent comment can be discarded. Deletes are soft, so `comments_cli.py restore` undoes them.
+
 ### Changed
 - README reorganised around the problem: a concrete scenario, who it is for and not for, a before/after table, and a four-step how-it-works. New explainer GIFs `docs/hero.gif`, `docs/before-after.gif` and `docs/how-it-works.gif` (illustrations, built from the real before/after screenshots), rendered with `docs/src/render_gifs.py`. The real-run `docs/demo.gif` and `docs/revise-loop.gif` are unchanged.
 

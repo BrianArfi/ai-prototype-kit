@@ -2,7 +2,13 @@
 //
 //   GET  /api/comments?slug=<slug>   -> {"comments":[...]}   oldest first
 //   POST /api/comments  {slug, name, text, parent?, where?, anchor?, state?}
-//                                    -> {"comment":{...}}   the stored record
+//                                    -> {"comment":{...}, "key":"..."}
+//   DELETE /api/comments  {slug, id, key?}   -> {"deleted":[ids]}
+//
+// `key` is the comment's delete key, returned once, to its author only. The
+// author's browser keeps it and sends it back to delete that comment. The page
+// owner deletes any comment with "Authorization: Bearer <OWNER_KEY>", where
+// OWNER_KEY is a Pages secret. Deleting a top comment deletes its thread.
 //
 // Storage is one Workers KV namespace bound as COMMENTS. Three kinds of key:
 //
@@ -14,15 +20,19 @@
 //                       read. Rebuilt on every POST from the per-comment keys
 //                       plus its own previous content, which also heals it if
 //                       an earlier rebuild ever missed a comment.
-//   deleted:<slug>      ids removed by the owner (comments_cli.py delete), so
-//                       a rebuild never brings a deleted comment back.
+//   deleted:<slug>      ids removed by the owner or the author (DELETE, or
+//                       comments_cli.py delete), so a rebuild never brings a
+//                       deleted comment back.
+//   k:<slug>:<id>       SHA-256 of the comment's delete key. Never served.
+//   trash:<slug>:<id>   a deleted comment, so comments_cli.py restore can undo it.
 //
 // KV is eventually consistent: another region can see a new comment up to
 // about 60 seconds late. The client keeps the comments its own reader posted
 // until the server shows them, so nobody ever sees their own comment vanish.
 //
-// No auth, by design: the pages are unlisted and the payload is capped. The
-// owner moderates with comments_cli.py, which talks to the KV API directly.
+// No login, by design: the pages are unlisted and the payload is capped.
+// Deleting needs the comment's own key or the owner key; the owner can also
+// moderate with comments_cli.py, which talks to the KV API directly.
 //
 // Cross-origin is opt-in. Set the Pages environment variable ALLOWED_ORIGINS
 // to a comma-separated list of origins (or "*") whose pages may call this
@@ -38,6 +48,7 @@ const MAX_PER_SLUG = 1000;
 const MAX_BODY_BYTES = 8192;
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,79}$/;
 const ID_RE = /^[a-z0-9]{6,24}$/;
+const KEY_RE = /^[a-f0-9]{32,64}$/;
 
 function json(data, status = 200, cors = null) {
   return new Response(JSON.stringify(data), {
@@ -54,6 +65,28 @@ function corsFor(request, env) {
   if (allowed.includes('*')) return { 'access-control-allow-origin': '*' };
   if (allowed.includes(origin)) return { 'access-control-allow-origin': origin, vary: 'Origin' };
   return null;
+}
+
+function newKey() {
+  const b = new Uint8Array(24);
+  crypto.getRandomValues(b);
+  return [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+}
+
+async function sha256(s) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(s)));
+  return [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, '0')).join('');
+}
+
+// Compared as hashes, so the time taken says nothing about the secret.
+async function sameSecret(a, b) {
+  if (!a || !b) return false;
+  return (await sha256(a)) === (await sha256(b));
+}
+
+function bearer(request) {
+  const m = /^Bearer\s+(.+)$/i.exec(request.headers.get('authorization') || '');
+  return m ? m[1].trim() : '';
 }
 
 function byteLength(s) {
@@ -147,6 +180,50 @@ async function rebuild(env, slug, fresh) {
   }
 }
 
+async function readBody(request) {
+  const len = Number(request.headers.get('content-length') || 0);
+  if (len > MAX_BODY_BYTES) return { error: 'comment too large', status: 413 };
+  try {
+    const raw = await request.text();
+    if (byteLength(raw) > MAX_BODY_BYTES) return { error: 'comment too large', status: 413 };
+    const body = JSON.parse(raw);
+    if (!body || typeof body !== 'object') return { error: 'bad json', status: 400 };
+    return { body };
+  } catch (e) {
+    return { error: 'bad json', status: 400 };
+  }
+}
+
+// Delete one comment, and its replies when it is a top comment. Same moves as
+// `comments_cli.py delete`: each record goes to the trash, its id onto the
+// deleted list, its key is removed, and the summary is rewritten without it.
+// Resolves to the deleted ids, or null when the comment does not exist.
+async function remove(env, slug, id) {
+  const summary = await readArray(env, `comments:${slug}`);
+  const records = new Map();
+  for (const c of summary) if (c && c.id) records.set(c.id, c);
+  const missing = (await listIds(env, slug)).filter((k) => !records.has(k));
+  const got = await Promise.all(missing.map((k) => env.COMMENTS.get(`c:${slug}:${k}`)));
+  got.forEach((raw) => {
+    if (!raw) return;
+    try {
+      const c = JSON.parse(raw);
+      if (c && c.id) records.set(c.id, c);
+    } catch (e) {}
+  });
+  const deleted = new Set(await readArray(env, `deleted:${slug}`));
+  const target = records.get(id);
+  if (!target || deleted.has(id)) return null;
+  const gone = [id, ...[...records.values()].filter((c) => c.parent === id).map((c) => c.id)];
+  await Promise.all(gone.map((g) => env.COMMENTS.put(`trash:${slug}:${g}`, JSON.stringify(records.get(g)))));
+  gone.forEach((g) => deleted.add(g));
+  await env.COMMENTS.put(`deleted:${slug}`, JSON.stringify([...deleted].sort()));
+  await Promise.all(gone.map((g) => env.COMMENTS.delete(`c:${slug}:${g}`)));
+  const drop = new Set(gone);
+  await env.COMMENTS.put(`comments:${slug}`, JSON.stringify(summary.filter((c) => c && !drop.has(c.id))));
+  return gone;
+}
+
 export async function onRequest(context) {
   const { request, env } = context;
   const cors = corsFor(request, env);
@@ -156,8 +233,8 @@ export async function onRequest(context) {
       status: 204,
       headers: {
         ...cors,
-        'access-control-allow-methods': 'GET, POST, OPTIONS',
-        'access-control-allow-headers': 'content-type',
+        'access-control-allow-methods': 'GET, POST, DELETE, OPTIONS',
+        'access-control-allow-headers': 'content-type, authorization',
         'access-control-max-age': '86400',
       },
     });
@@ -173,17 +250,9 @@ export async function onRequest(context) {
   }
 
   if (request.method === 'POST') {
-    const len = Number(request.headers.get('content-length') || 0);
-    if (len > MAX_BODY_BYTES) return reply({ error: 'comment too large' }, 413);
-    let body;
-    try {
-      const raw = await request.text();
-      if (byteLength(raw) > MAX_BODY_BYTES) return reply({ error: 'comment too large' }, 413);
-      body = JSON.parse(raw);
-    } catch (e) {
-      return reply({ error: 'bad json' }, 400);
-    }
-    if (!body || typeof body !== 'object') return reply({ error: 'bad json' }, 400);
+    const read = await readBody(request);
+    if (read.error) return reply({ error: read.error }, read.status);
+    const body = read.body;
 
     const slug = clean(body.slug, 80);
     if (!SLUG_RE.test(slug)) return reply({ error: 'bad slug' }, 400);
@@ -220,6 +289,8 @@ export async function onRequest(context) {
       state: parent ? null : cleanState(body.state),
       at: new Date().toISOString(),
     };
+    const key = newKey();
+    await env.COMMENTS.put(`k:${slug}:${c.id}`, await sha256(key));
     await env.COMMENTS.put(`c:${slug}:${c.id}`, JSON.stringify(c));
     try {
       await rebuild(env, slug, c);
@@ -227,7 +298,27 @@ export async function onRequest(context) {
       // The comment is already safe in its own key; the next POST or
       // `comments_cli.py repair` folds it into the summary.
     }
-    return reply({ comment: c });
+    return reply({ comment: c, key });
+  }
+
+  if (request.method === 'DELETE') {
+    const read = await readBody(request);
+    if (read.error) return reply({ error: read.error }, read.status);
+    const body = read.body;
+    const slug = clean(body.slug, 80);
+    if (!SLUG_RE.test(slug)) return reply({ error: 'bad slug' }, 400);
+    const id = clean(body.id, 24);
+    if (!ID_RE.test(id)) return reply({ error: 'bad id' }, 400);
+    let allowed = await sameSecret(bearer(request), env.OWNER_KEY);
+    if (!allowed) {
+      const key = clean(body.key, 64);
+      const stored = KEY_RE.test(key) ? await env.COMMENTS.get(`k:${slug}:${id}`) : null;
+      allowed = !!stored && (await sha256(key)) === stored;
+    }
+    if (!allowed) return reply({ error: 'only the author or the page owner can delete this comment' }, 403);
+    const gone = await remove(env, slug, id);
+    if (!gone) return reply({ error: 'no such comment' }, 404);
+    return reply({ deleted: gone });
   }
 
   return reply({ error: 'method not allowed' }, 405);

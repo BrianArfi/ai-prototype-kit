@@ -5,6 +5,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-04
+
+### Added
+- Delete from the page. Each new comment comes back with a delete key, sent once to its author; the browser keeps it and shows **Delete** on that comment. The server stores only the key's SHA-256.
+- Owner mode. Open any page once with `?ac-owner=<owner key>` to get **Delete** on every comment of the site. The key leaves the address bar at once; "exit" in the list footer turns owner mode off. The owner key is the `OWNER_KEY` Pages secret on Cloudflare and `--token` on Node.
+- `DELETE /api/comments {slug, id, key?}` on both backends, with `Authorization: Bearer` for the owner. A top comment goes with its replies. Deletes are soft, so `comments_cli.py restore` undoes them.
+- **Discard** next to Retry on a comment that was not sent.
+
+### Changed
+- CORS preflight now allows `DELETE` and the `authorization` header.
+- The Node server adds a `key_hash` column to an existing database on start.
+- README only: a concrete problem scenario, who it is for and not for, a before/after table, and four new GIFs. `docs/hero.gif`, `docs/before-after.gif` and `docs/how-it-works.gif` are illustrations built on real screenshots of the client; `docs/owner-demo.gif` is a real run of a reader comment and the owner CLI (`list`, then `delete`). Script options, requirements, limits and files move into collapsed sections. `python docs/src/render.py owner` and `anim` re-render the new GIFs. No behaviour changes.
+
 ## [1.0.3] - 2026-10-01
 
 ### Changed

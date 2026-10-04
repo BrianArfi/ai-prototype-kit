@@ -5,7 +5,7 @@
 For PMs, founders, consultants and team leads who need people to understand an idea and agree on it, without waiting for a designer.
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Version 0.1.2](https://img.shields.io/badge/version-0.1.2-green.svg)](CHANGELOG.md)
+[![Version 0.1.3](https://img.shields.io/badge/version-0.1.3-green.svg)](CHANGELOG.md)
 
 ![Animated hero, "Comment on it. AI revises it." The coffee-order prototype appears on a phone, Dina's comment "Default to Large, most people pick it" pops up pinned on the Large button, a dark card types the report row a real /revise-from-comments run printed, "1 | Dina | Done: Large is now selected by default", and the same link appears as v2 with Large selected and the price at $5.10. The phone screens and the report row are real; the motion is an illustration.](docs/hero.gif)
 
@@ -149,7 +149,7 @@ More questions: [docs/faq.md](docs/faq.md).
 
 ## Changelog
 
-The full history is in [CHANGELOG.md](CHANGELOG.md). **Latest: [0.1.2] - 2026-10-01**: new README hero and demo GIF from a real comment and a real `/revise-from-comments` run, and the example's price now follows its default size. It bundles artifact-comments v1.0.3. **Before that, [0.1.0] - 2026-09-30**, the first release.
+The full history is in [CHANGELOG.md](CHANGELOG.md). **Latest: [0.1.3] - 2026-10-04**: bundles artifact-comments v1.1.0, so reviewers delete their own comments in the page and the owner deletes any comment in owner mode. Also a README reorganised around the problem, with new explainer GIFs. **Before that, [0.1.2] - 2026-10-01**: new README hero and demo GIF from a real `/revise-from-comments` run. **Before that, [0.1.0] - 2026-09-30**, the first release.
 
 ## License
 

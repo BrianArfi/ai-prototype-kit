@@ -9,7 +9,11 @@
 //
 //   GET     /api/comments?slug=<slug>   -> {"comments":[...]}   oldest first
 //   POST    /api/comments  {slug, name, text, parent?, where?, anchor?, state?}
-//                                       -> {"comment":{...}}   the stored record
+//                                       -> {"comment":{...}, "key":"..."}
+//   DELETE  /api/comments  {slug, id, key?}  -> {"deleted":[ids]}
+//           with the comment's own key (returned once to its author), or
+//           "Authorization: Bearer <token>" for the owner. A top comment goes
+//           with its replies, into the trash (restore undoes it).
 //   OPTIONS /api/comments               CORS preflight, when --allow-origin is set
 //
 // Owner endpoints, only when a token is set (--token or ARTIFACT_COMMENTS_TOKEN),
@@ -44,6 +48,7 @@ const MAX_PER_SLUG = 1000;
 const MAX_BODY_BYTES = 8192;
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,79}$/;
 const ID_RE = /^[a-z0-9]{6,24}$/;
+const KEY_RE = /^[a-f0-9]{32,64}$/;
 
 // Strip control characters, keep newlines in the comment body.
 function clean(s, max, keepNewlines = false) {
@@ -72,6 +77,14 @@ function cleanState(s) {
   if (!s || typeof s !== 'object' || Array.isArray(s)) return null;
   const txt = JSON.stringify(s);
   return txt.length <= 600 ? JSON.parse(txt) : null;
+}
+
+function newKey() {
+  return crypto.randomBytes(24).toString('hex');
+}
+
+function sha256(s) {
+  return crypto.createHash('sha256').update(String(s)).digest('hex');
 }
 
 function newId() {
@@ -129,13 +142,18 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS comments_by_slug ON comments (slug, deleted_at, at);
 `);
+// Added in 1.1.0: the SHA-256 of each comment's delete key. Older rows have none,
+// so only the owner can delete them.
+if (!db.prepare('PRAGMA table_info(comments)').all().some((c) => c.name === 'key_hash')) {
+  db.exec('ALTER TABLE comments ADD COLUMN key_hash TEXT');
+}
 
 const q = {
   visible: db.prepare('SELECT record FROM comments WHERE slug = ? AND deleted_at IS NULL ORDER BY at, seq'),
   count: db.prepare('SELECT COUNT(*) AS n FROM comments WHERE slug = ? AND deleted_at IS NULL'),
   parentOf: db.prepare('SELECT parent FROM comments WHERE slug = ? AND id = ? AND deleted_at IS NULL'),
-  insert: db.prepare('INSERT INTO comments (slug, id, parent, at, record) VALUES (?, ?, ?, ?, ?)'),
-  one: db.prepare('SELECT record, deleted_at FROM comments WHERE slug = ? AND id = ?'),
+  insert: db.prepare('INSERT INTO comments (slug, id, parent, at, record, key_hash) VALUES (?, ?, ?, ?, ?, ?)'),
+  one: db.prepare('SELECT record, deleted_at, key_hash FROM comments WHERE slug = ? AND id = ?'),
   slugs: db.prepare('SELECT DISTINCT slug FROM comments ORDER BY slug'),
   all: db.prepare('SELECT record, deleted_at FROM comments WHERE slug = ? ORDER BY at, seq'),
   softDelete: db.prepare(
@@ -265,8 +283,31 @@ async function postComment(req, res, cors) {
       state: parent ? null : cleanState(body.state),
       at: new Date().toISOString(),
     };
-    q.insert.run(slug, c.id, c.parent, c.at, JSON.stringify(c));
-    return { status: 200, data: { comment: c } };
+    const key = newKey();
+    q.insert.run(slug, c.id, c.parent, c.at, JSON.stringify(c), sha256(key));
+    return { status: 200, data: { comment: c, key } };
+  });
+  return send(res, out.status, out.data, cors);
+}
+
+// Delete from the page: the author with the comment's key, or the owner with the token.
+async function deleteComment(req, res, cors) {
+  const body = await readJson(req, res, cors);
+  if (body === undefined) return;
+  const slug = clean(body.slug, 80);
+  if (!SLUG_RE.test(slug)) return send(res, 400, { error: 'bad slug' }, cors);
+  const id = clean(body.id, 24);
+  if (!ID_RE.test(id)) return send(res, 400, { error: 'bad id' }, cors);
+  const key = clean(body.key, 64);
+  const out = tx(() => {
+    const row = q.one.get(slug, id);
+    const owner = authorized(req);
+    const author = !!(row && row.key_hash && KEY_RE.test(key) &&
+      crypto.timingSafeEqual(Buffer.from(sha256(key)), Buffer.from(row.key_hash)));
+    if (!owner && !author) return { status: 403, data: { error: 'only the author or the page owner can delete this comment' } };
+    if (!row || row.deleted_at) return { status: 404, data: { error: 'no such comment' } };
+    const ids = q.softDelete.all(new Date().toISOString(), slug, id, id).map((r) => r.id);
+    return { status: 200, data: { deleted: ids } };
   });
   return send(res, out.status, out.data, cors);
 }
@@ -366,8 +407,8 @@ async function handle(req, res) {
       if (!cors) { res.writeHead(204); return res.end(); }
       res.writeHead(204, {
         ...cors,
-        'access-control-allow-methods': 'GET, POST, OPTIONS',
-        'access-control-allow-headers': 'content-type',
+        'access-control-allow-methods': 'GET, POST, DELETE, OPTIONS',
+        'access-control-allow-headers': 'content-type, authorization',
         'access-control-max-age': '86400',
       });
       return res.end();
@@ -378,6 +419,7 @@ async function handle(req, res) {
       return send(res, 200, { comments: getComments(slug) }, cors);
     }
     if (req.method === 'POST') return postComment(req, res, cors);
+    if (req.method === 'DELETE') return deleteComment(req, res, cors);
     return send(res, 405, { error: 'method not allowed' }, cors);
   }
 

@@ -19,6 +19,11 @@
  * - Re-rendering after a background refresh never rebuilds a textarea, so
  *   text being typed is never wiped.
  * - A comment whose part cannot be found says so. It never fails silently.
+ *
+ * Deleting: the server returns a delete key with each new comment, and this
+ * browser keeps it, so the author can delete their own comment. The page owner
+ * opens any page once with ?ac-owner=<owner key> to delete any comment on that
+ * site; ?ac-owner= (empty) leaves owner mode.
  */
 (function () {
   'use strict';
@@ -26,7 +31,7 @@
   window.__artifactCommentsLoaded = true;
 
   // ---------------------------------------------------------------- config
-  var VERSION = '1.0.3';    // keep in step with CHANGELOG.md and server/node/package.json
+  var VERSION = '1.1.0';    // keep in step with CHANGELOG.md and server/node/package.json
   var script = document.currentScript || {};
   var ds = script.dataset || {};
   function A() { return window.ArtifactComments || {}; } // read late: a page may register after us
@@ -41,6 +46,8 @@
   var NAME_KEY = 'artifact-comments:name';
   var PINS_KEY = 'artifact-comments:pins-hidden:' + SLUG; // per page: hiding pins on one page must not hide them on the next
   var PENDING_KEY = 'artifact-comments:pending:' + SLUG;
+  var KEYS_KEY = 'artifact-comments:keys:' + SLUG;      // id -> delete key, for comments posted here
+  var OWNER_KEY = 'artifact-comments:owner';             // per site: one owner key covers every page
 
   function slugFromPath() {
     var last = location.pathname.split('/').filter(Boolean).pop() || 'index';
@@ -61,6 +68,28 @@
   var hoverEl = null;
   var flashEl = null, flashUntil = 0;
   var lastFetch = 0, lastSig = '';
+  var keys = loadJson(KEYS_KEY, {});
+  var gone = {};            // id -> time deleted here; hidden until a stale read catches up
+  var ownerKey = takeOwnerKey();
+
+  function loadJson(k, d) {
+    try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : d; } catch (e) { return d; }
+  }
+  function saveKeys() { try { localStorage.setItem(KEYS_KEY, JSON.stringify(keys)); } catch (e) {} }
+  // ?ac-owner=<key> turns owner mode on for this site, ?ac-owner= turns it off.
+  // The key is taken out of the address bar at once, so it is not shared by accident.
+  function takeOwnerKey() {
+    var stored = '';
+    try { stored = localStorage.getItem(OWNER_KEY) || ''; } catch (e) {}
+    var u;
+    try { u = new URL(location.href); } catch (e) { return stored; }
+    if (!u.searchParams.has('ac-owner')) return stored;
+    stored = u.searchParams.get('ac-owner').trim();
+    try { if (stored) localStorage.setItem(OWNER_KEY, stored); else localStorage.removeItem(OWNER_KEY); } catch (e) {}
+    u.searchParams.delete('ac-owner');
+    try { history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch (e) {}
+    return stored;
+  }
 
   function loadPending() {
     try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); } catch (e) { return []; }
@@ -88,8 +117,8 @@
 
   function allComments() {
     var byId = {};
-    server.forEach(function (c) { byId[c.id] = norm(c); });
-    Object.keys(mine).forEach(function (id) { if (!byId[id]) byId[id] = norm(mine[id]); });
+    server.forEach(function (c) { if (!gone[c.id]) byId[c.id] = norm(c); });
+    Object.keys(mine).forEach(function (id) { if (!byId[id] && !gone[id]) byId[id] = norm(mine[id]); });
     pending.forEach(function (c) { byId[c.id] = norm(c); });
     return Object.keys(byId).map(function (k) { return byId[k]; })
       .sort(function (a, b) { return a.at < b.at ? -1 : a.at > b.at ? 1 : 0; });
@@ -136,6 +165,9 @@
           if (server.some(function (c) { return c.id === id; }) ||
               now - Date.parse(mine[id].at) > 300000) delete mine[id];
         });
+        Object.keys(gone).forEach(function (id) {   // the server has caught up with a delete, or 5 min passed
+          if (!server.some(function (c) { return c.id === id; }) || now - gone[id] > 300000) delete gone[id];
+        });
         changed();
       })
       .catch(function () {});
@@ -157,6 +189,7 @@
       .then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (d) {
           if (!r.ok || !d.comment) throw new Error(d.error || ('HTTP ' + r.status));
+          if (d.key) { keys[d.comment.id] = d.key; saveKeys(); }
           return d.comment;
         });
       })
@@ -187,6 +220,40 @@
     savePending();
     send(c);
     return c.id;
+  }
+
+  // Delete a saved comment (a top comment takes its replies with it), or drop
+  // an unsent one from this browser.
+  function canDelete(c) { return !/^tmp-/.test(c.id) && !!(ownerKey || keys[c.id]); }
+  function remove(c) {
+    var t = !c.parent && threadById(c.id), n = t ? t.replies.length : 0;
+    if (!window.confirm(n ? 'Delete this comment and its ' + n + (n === 1 ? ' reply?' : ' replies?') : 'Delete this comment?')) return;
+    var headers = { 'content-type': 'application/json' };
+    if (ownerKey) headers.authorization = 'Bearer ' + ownerKey;
+    fetch(API, { method: 'DELETE', headers: headers, body: JSON.stringify({ slug: SLUG, id: c.id, key: keys[c.id] || '' }) })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) {
+          if (!r.ok || !Array.isArray(d.deleted)) throw new Error(d.error || ('HTTP ' + r.status));
+          return d.deleted;
+        });
+      })
+      .then(function (ids) {
+        var now = Date.now();
+        ids.concat([c.id]).forEach(function (id) { gone[id] = now; delete mine[id]; delete keys[id]; });
+        saveKeys();
+        if (openId === c.id) closeThread();
+        changed();
+      })
+      .catch(function (err) {
+        renderBubble('Not deleted: ' + String(err && err.message || err));
+      });
+  }
+  function discard(c) {
+    if (!window.confirm('Discard this unsent comment?')) return;
+    pending = pending.filter(function (p) { return p.id !== c.id && p.parent !== c.id; });
+    savePending();
+    if (openId === c.id) closeThread();
+    changed();
   }
 
   function retryFailed() {
@@ -374,6 +441,11 @@
       b.type = 'button';
       b.onclick = function (e) { e.stopPropagation(); send(c); };
       s.appendChild(b);
+      s.appendChild(document.createTextNode(' · '));
+      var d = el('button', 'link', 'Discard');
+      d.type = 'button';
+      d.onclick = function (e) { e.stopPropagation(); discard(c); };
+      s.appendChild(d);
       return s;
     }
     return null;
@@ -384,6 +456,13 @@
     h.appendChild(el('span', 'avatar', (c.name || '?').trim().charAt(0).toUpperCase() || '?'));
     h.appendChild(el('b', 'who', c.name));
     h.appendChild(el('span', 'when', ago(c.at)));
+    if (canDelete(c)) {
+      var del = el('button', 'del', 'Delete');
+      del.type = 'button';
+      del.title = ownerKey && !keys[c.id] ? 'Delete (page owner)' : 'Delete your comment';
+      del.onclick = function (e) { e.stopPropagation(); remove(c); };
+      h.appendChild(del);
+    }
     m.appendChild(h);
     var t = el('div', 'txt', c.text);
     t.dir = 'auto';
@@ -463,6 +542,17 @@
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
     f.appendChild(a);
+    if (ownerKey) {
+      f.appendChild(document.createTextNode(' · Owner mode '));
+      var off = el('button', 'link', 'exit');
+      off.type = 'button';
+      off.onclick = function () {
+        ownerKey = '';
+        try { localStorage.removeItem(OWNER_KEY); } catch (e) {}
+        changed();
+      };
+      f.appendChild(off);
+    }
     return f;
   }
 
@@ -997,7 +1087,7 @@
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 
   // test and console hook; not part of the page contract
-  window.__artifactComments = { refresh: refresh, slug: SLUG, version: VERSION,
+  window.__artifactComments = { refresh: refresh, slug: SLUG, version: VERSION, owner: function () { return !!ownerKey; },
                                 threads: function () { return threads; } };
 
   // ---------------------------------------------------------------- style
@@ -1044,6 +1134,7 @@
       '.txt{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:2px}',
       '.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}',
       '.status{font-size:12px;color:#8c959f;margin-top:2px}.status.failed{color:#b42318}',
+      '.del{border:0;background:none;padding:0 2px;color:#8c959f;font-size:12px;text-decoration:underline}.del:hover{color:#b42318}',
       '.link{border:0;background:none;padding:0;color:#1c6e4f;text-decoration:underline;font-size:12px}',
       '.form{display:flex;flex-direction:column;gap:6px;margin-top:8px}',
       '.compose .form{margin-top:0}',

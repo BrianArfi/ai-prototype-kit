@@ -2,7 +2,7 @@
 
 [Back to the README](../README.md)
 
-`scripts/comments_cli.py`, Python 3.8 or later, standard library only. Readers cannot delete or edit anything; the owner does it here.
+`scripts/comments_cli.py`, Python 3.8 or later, standard library only. Since 1.1.0, authors delete their own comments from the page, and the owner can delete any comment from the page in owner mode (`?ac-owner=<owner key>`, see [api.md](api.md)). The CLI is still the place to list every page, restore from the trash and repair.
 
 **On Cloudflare** (the default, `--backend cloudflare`):
 
