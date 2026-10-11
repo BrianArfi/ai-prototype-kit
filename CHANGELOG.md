@@ -5,6 +5,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+- Style gallery. `assets/style-gallery.html` is one static page showing 17 styles (math, typographic, cutpaper, sketchbook, riso, terminal, isometric, blueprint, neo brutalism, whiteboard, liquid morph, holographic neon, glass morphism, clay 3D, ASCII art, pixel art, art deco) with a copy-the-name picker.
+- `docs/styles.md`: a token block and a list of moves for each style.
+
+### Changed
+- `/mockup` now asks which style to use and shows the gallery, instead of choosing a look itself. The old behaviour is the `typographic` default when the user says "you choose".
+
 ## [0.1.3] - 2026-10-04
 
 ### Added

@@ -18,7 +18,28 @@ A convincing prototype of the wrong flow costs more than no prototype, because p
 they see. If a step is genuinely undecided, build the recommended path and mark the alternative
 visibly on the screen. Do not quietly pick one.
 
-## 2. Build it
+## 2. Ask which style, and show them
+
+Do not pick a look for the user. Seventeen styles are available, and a review about colour and mood
+is a waste of a review that was meant for the flow.
+
+1. Put the gallery where the user can open it: copy `KIT/assets/style-gallery.html` next to the
+   prototype (in an AI Second Brain workspace, into the workspace, for example
+   `inbox/<date>-style-gallery/index.html`, because its viewer rejects paths outside the workspace).
+   Give the **absolute** path.
+2. Ask once, in plain words: "Open this page, click the style you like and paste me the line it gives
+   you (for example `style: glass`). Or tell me who the prototype is for and I will suggest one."
+   Seventeen choices do not fit a multiple-choice question, so ask in text.
+3. If they ask you to suggest, use the table in `KIT/docs/styles.md` ("Choosing, when the user does
+   not know"), name one style, give one line of reason, and let them overrule it.
+4. If they say "you choose", "bebas" or do not care, use `typographic` and say so in one line.
+5. Read the style's recipe in `KIT/docs/styles.md` and build with it. One style per prototype. The
+   chosen key goes in a comment at the top of the file (`<!-- style: glass -->`) so a revision keeps it.
+
+When a prototype already exists and the user only wants another look, change the recipe and keep the
+flow, the screens and the comment adapter exactly as they are.
+
+## 3. Build it
 
 - **One file, fully self-contained.** No external CSS, font, script or image. Inline SVG for icons.
 - **A device frame** when it is a phone journey, so the reader can tell app from web.
@@ -29,11 +50,12 @@ visibly on the screen. Do not quietly pick one.
 - **A self-playing option**, so the presenter can talk over it instead of clicking.
 - **Realistic content.** Plausible names, prices, the right currency and language. Lorem ipsum
   reads as unfinished and turns the review into a discussion about the copy.
-- Light and dark via `:root` custom properties plus a `[data-theme]` override. Honour
+- The chosen style's tokens in `:root`, and its **moves** applied (not just its colours). Light and
+  dark via a `[data-theme]` override where the style allows it (see `KIT/docs/styles.md`). Honour
   `prefers-reduced-motion`.
 - **A comment adapter.** Required, see the next section.
 
-## 3. The comment adapter (required)
+## 4. The comment adapter (required)
 
 The published link has pinned comments (artifact-comments, docs in `KIT/artifact-comments/README.md`). A
 prototype shows different screens in the same place, so the comment layer needs to know which
@@ -65,7 +87,7 @@ Rules that keep it working:
 - Stable `id`s on the parts people will comment on (a card, a button, a form group).
 - `KIT/examples/coffee-order.html` is a complete working example. Copy its pattern.
 
-## 4. Verify
+## 5. Verify
 
 ```
 grep -nE 'https?://|@import|fetch\(|XMLHttpRequest|<img|src=' <file>.html
@@ -74,7 +96,7 @@ grep -nE 'https?://|@import|fetch\(|XMLHttpRequest|<img|src=' <file>.html
 Only internal SVG references may match. Then walk every screen yourself and confirm each control
 does what it claims. Press every presenter key once.
 
-## 5. Publish and share
+## 6. Publish and share
 
 Hand over the **absolute** path first. When the user wants a link, follow `/publish`:
 
